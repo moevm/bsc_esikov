@@ -30,12 +30,12 @@ class CTokenizer(Tokenizer):
     # L - Logic - логические операции
     # U - Upheaval - побитовые операции сдвига
     # G - Governance - управляющие конструкции
+    # V - Var - структуры
     def _process(self, src):
-        print("tokenize c-file\n")
         change_code = self.clear_space(src)
         print(change_code, "\n")
         # Замена названий переменных, которые совпадают с именами токенов
-        change_code = re.sub(r'[NDBPCAFTMRISELUG]', "X", change_code)
+        change_code = re.sub(r'[NDBPCAFTMRISELUGV]', "X", change_code)
         # Токенизация возврата из функции
         change_code = re.sub(r'return', "$R$", change_code)
         # Токенизация указателей на функцию
@@ -48,6 +48,10 @@ class CTokenizer(Tokenizer):
         change_code = re.sub(r'([a-zA-Z_]\w*)\([^;!><|&]*\)(;|!=|,|==|>|<|>=|<=|&&|\|\|)', "$C$", change_code)
         # Токенизация приведения типа
         change_code = re.sub(r'\([a-zA-Z_]\w*\**\)', "$T$", change_code)
+        # Токенизация указателя на структуру
+        change_code = re.sub(r'struct([a-zA-Z_]\w*;?)?\*', "$P$", change_code)
+        # Токенизация структур
+        change_code = re.sub(r'(struct|union)([a-zA-Z_]\w*;?)?', "$V$", change_code)
         # Токенизация основных типов данных
         change_code = re.sub(r'({int_types}|{char_types}|{float_types}|void)\*+([a-zA-Z_]\w*;?)?'.format(
             int_types=self.__int_types, char_types=self.__char_types, float_types=self.__float_types), "$P$", change_code)
@@ -55,7 +59,6 @@ class CTokenizer(Tokenizer):
         change_code = re.sub(r'({float_types})([a-zA-Z_]\w*;?)?'.format(float_types=self.__float_types), "$D$",
                              change_code)
         change_code = re.sub(r'({int_types})([a-zA-Z_]\w*;?)?'.format(int_types=self.__int_types), "$N$", change_code)
-        print(change_code, "\n")
         # Токенизация циклов
         change_code = re.sub(r'do', "$S$", change_code)
         change_code = re.sub(r'while\([^;]*\);', "", change_code)
@@ -70,22 +73,21 @@ class CTokenizer(Tokenizer):
         # Токенизация математических выражений
         change_code = re.sub(r'(([a-zA-Z_]\w*)\+\+)|(\+\+[a-zA-Z_]\w*)', "$M$", change_code)
         change_code = re.sub(r'(([a-zA-Z_]\w*)--)|(--[a-zA-Z_]\w*)', "$M$", change_code)
-        change_code = re.sub(r'[^={]\*', "$M$", change_code)
-        change_code = re.sub(r'[^={}><|&][+\-/%]', "$M$", change_code)
-        print(change_code, "\n")
+        change_code = re.sub(r'[^={},(]\*', "$M$", change_code)
+        change_code = re.sub(r'[^={}><|&][+\-/%][^>]', "$M$", change_code)
         # Токенизация логических операций
         change_code = re.sub(r'&&|\|\||!', "$L$", change_code)
         # Токенизация побитовых операций
         change_code = re.sub(r'[^={}><|&](<<|>>|&|\^|\|)', "$U$", change_code)
         change_code = re.sub(r'~', "$U$", change_code)
         # Токенизация сравнений
-        change_code = re.sub(r'==|>|<|<=|>=|!=', "$E$", change_code)
+        change_code = re.sub(r'==|([^-]>)|<|<=|>=|!=', "$E$", change_code)
         # Токенизация присваивания
         change_code = re.sub(r'=(\{[^;]*};)?', "$A$", change_code)
         # Удаление всех символов не соответствующих токенам
         # change_code = re.sub(r'\([^)$]*\)', "$()$", change_code)
         print(change_code, "\n")
-        change_code = re.sub(r'[^{}NDBPCAFTMRISELUG]*', "", change_code)
+        change_code = re.sub(r'[^{}NDBPCAFTMRISELUGV]*', "", change_code)
 
         return change_code
 
