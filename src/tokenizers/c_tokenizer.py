@@ -32,7 +32,10 @@ class CTokenizer(Tokenizer):
     # G - Governance - управляющие конструкции
     # V - Var - структуры
     def _process(self, src):
-        change_code = self.clear_space(src)
+        # Исправление названия переменной, содержащей в себе имя типа данных языка C
+        main_types = "short|int|long|signed|unsigned|char|float|double"
+        change_code = re.sub(r'(\w({types}))|(({types})\w)'.format(types=main_types), "z", src)
+        change_code = self.clear_space(change_code)
         print(change_code, "\n")
         # Замена названий переменных, которые совпадают с именами токенов
         change_code = re.sub(r'[NDBPCAFTMRISELUGV]', "X", change_code)
