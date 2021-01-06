@@ -36,13 +36,16 @@ class CTokenizer(Tokenizer):
         main_types = "short|int|long|signed|unsigned|char|float|double"
         change_code = re.sub(r'(\w({types}))|(({types})\w)'.format(types=main_types), "z", src)
         change_code = self.clear_space(change_code)
-        print(change_code, "\n")
         # Замена названий переменных, которые совпадают с именами токенов
         change_code = re.sub(r'[NDBPCAFTMRISELUGV]', "X", change_code)
         # Токенизация возврата из функции
         change_code = re.sub(r'return', "$R$", change_code)
         # Токенизация указателей на функцию
         change_code = re.sub(r'\w+\*?\(\*[\w\[\]]+\)\(([\w$.*\[\]]*,*)*\)', "$P$", change_code)
+        # Удаление break из switch
+        change_code = CTokenizer.replace_break_in_switch(change_code)
+        # Удаление ключевого слова switch, чтобы оно не было токенизировано как определение функции
+        change_code = re.sub(r'switch[^{]*{', "", change_code)
         # Токенизация определения функции
         change_code = re.sub(r'([a-zA-Z_][\w*]*)\(([\w$.*\[\]]*,*)*\){', "$F${", change_code)
         # Токенизация функции, возвращающей указатель на функцию
@@ -62,6 +65,8 @@ class CTokenizer(Tokenizer):
         change_code = re.sub(r'({float_types})([a-zA-Z_]\w*;?)?'.format(float_types=self.__float_types), "$D$",
                              change_code)
         change_code = re.sub(r'({int_types})([a-zA-Z_]\w*;?)?'.format(int_types=self.__int_types), "$N$", change_code)
+        # Токенизация свитч
+        change_code = re.sub(r'(case|default)[^:]*:{?', "$I${", change_code)
         # Токенизация циклов
         change_code = re.sub(r'do', "$S$", change_code)
         change_code = re.sub(r'while\([^;]*\);', "", change_code)
@@ -89,10 +94,48 @@ class CTokenizer(Tokenizer):
         change_code = re.sub(r'=(\{[^;]*};)?', "$A$", change_code)
         # Удаление всех символов не соответствующих токенам
         # change_code = re.sub(r'\([^)$]*\)', "$()$", change_code)
-        print(change_code, "\n")
         change_code = re.sub(r'[^{}NDBPCAFTMRISELUGV]*', "", change_code)
+        print(change_code, "\n")
 
         return change_code
+
+    def __place_curly_braces_in_token_str(self, tokens, index):
+        for i in range(index, len(tokens)):
+            if tokens[i] == "S" or tokens[i] == "I":
+                if tokens[i + 1] != "{":
+                    return self.__place_curly_braces_in_token_str(tokens[:i+1] + "{" + tokens[i+1] + "}" + tokens[i+2:], i)
+        return tokens
+
+    @staticmethod
+    def replace_break_in_switch(src_without_space, begin_find=0, is_replace_last_symbol_switch=True):
+        index = src_without_space.find("switch(", begin_find)
+        if index != -1:
+            end_switch = CTokenizer.find_index_end_switch(src_without_space, index)
+            change_src = src_without_space
+            if end_switch is not None:
+                temp_str = src_without_space[index:end_switch+1]
+                temp_str = re.sub(r'break;}?', "aaaaa;}", temp_str)
+                change_src = src_without_space[:index] + temp_str + src_without_space[end_switch+1:]
+                if is_replace_last_symbol_switch is True:
+                    change_src = change_src[:end_switch] + ";" + change_src[end_switch+1:]
+            return CTokenizer.replace_break_in_switch(change_src, end_switch)
+        return src_without_space
+
+    @staticmethod
+    def find_index_end_switch(src_without_space, index=0):
+        for i in range(index, len(src_without_space)):
+            if src_without_space[i] == "}":
+                if i + 1 < len(src_without_space):
+                    if src_without_space[i + 1] == "}":
+                        return i + 1
+                    else:
+                        if src_without_space.find("case", i + 1, i + 5) != -1:
+                            return CTokenizer.find_index_end_switch(src_without_space, i + 2)
+                        else:
+                            return i
+                else:
+                    return i
+        return None
 
     def _clear_import(self, src):
         result = re.sub(r'\s*#include\s*[<"].*[>"]\s*', "", src)
