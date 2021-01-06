@@ -5,6 +5,8 @@ from src.tokenizers.c_tokenizer import CTokenizer
 class TestCTokenizer(unittest.TestCase):
     def setUp(self):
         self.tokenizer = CTokenizer()
+        self.switch_str = 'switch(x) { case 1: { printf("x = 1"); break; } case 2: printf("x = 2"); break; ' \
+                          'default: { printf("x is undefined"); break;}}'
 
     def test__clear_comments(self):
         self.assertEqual(self.tokenizer._clear_comments(""), "")
@@ -148,6 +150,21 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(self.tokenizer.tokenize('union code id = {120};'), "VA")
         self.assertEqual(self.tokenizer.tokenize('union code { int digit; char letter; };'), "V{NB}")
         self.assertEqual(self.tokenizer.tokenize('struct point{ unsigned int x:5; unsigned int y:3;};'), "V{NN}")
+        self.assertEqual(self.tokenizer.tokenize(self.switch_str), "I{C}I{C}I{C}")
+
+    def test_find_index_end_switch(self):
+        self.assertEqual(CTokenizer.find_index_end_switch(CTokenizer.clear_space(self.switch_str)), 103)
+        self.assertEqual(CTokenizer.find_index_end_switch(CTokenizer.clear_space(self.switch_str * 2)), 103)
+        self.assertEqual(CTokenizer.find_index_end_switch(CTokenizer.clear_space(self.switch_str * 2), 104), 207)
+        self.assertIsNone(CTokenizer.find_index_end_switch("if(a > b) return a; else a++;"))
+
+    def test_replace_break_in_switch(self):
+        replace_str = CTokenizer.replace_break_in_switch(CTokenizer.clear_space(self.switch_str))
+        self.assertEqual(replace_str.find("break;"), -1)
+        replace_str = CTokenizer.replace_break_in_switch(CTokenizer.clear_space(self.switch_str * 2))
+        self.assertEqual(replace_str.find("break;"), -1)
+        replace_str = "while(x < 10) x += 1;"
+        self.assertEqual(CTokenizer.replace_break_in_switch(replace_str), replace_str)
 
 
 if __name__ == '__main__':
