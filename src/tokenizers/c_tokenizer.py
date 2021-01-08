@@ -3,11 +3,13 @@ from src.tokenizers.tokenizer import Tokenizer
 
 
 class CTokenizer(Tokenizer):
-    __int_types = "unsignedlonglongint|unsignedlonglong|unsignedlongint|unsignedlong|unsignedint|unsignedshortint|" \
-                  "unsignedshort|unsigned|signedlonglongint|signedlonglong|signedlongint|signedlong|signedshortint|" \
-                  "signedshort|signedint|signed|longlongint|longlong|longint|long|shortint|short|int"
-    __char_types = "char|signedchar|unsignedchar"
-    __float_types = "float|double|longdouble"
+    INT_TYPES = "|".join(["unsigned long long int", "unsigned long long", "unsigned long int", "unsigned long",
+                     "unsigned int", "unsigned short int", "unsigned short", "unsigned", "signed long long int",
+                     "signed long long", "signed long int", "signed long", "signed short int", "signed short",
+                     "signed int", "signed", "long long int", "long long", "long int", "long", "short int",
+                     "short", "int"]).replace(" ", "")
+    CHAR_TYPES = "|".join(["signed char", "unsigned char", "char"]).replace(" ", "")
+    FLOAT_TYPES = "|".join(["long double", "double", "float"]).replace(" ", "")
 
     @property
     def keywords(self):
@@ -75,10 +77,10 @@ class CTokenizer(Tokenizer):
         change_code = re.sub(r'(struct|union)([a-zA-Z_]\w*;?)?', CTokenizer.border_token("struct"), change_code)
         # Токенизация основных типов данных
         change_code = re.sub(r'({int_types}|{char_types}|{float_types}|void)\*+([a-zA-Z_]\w*;?)?'.format(
-            int_types=self.__int_types, char_types=self.__char_types, float_types=self.__float_types), CTokenizer.border_token("ptr"), change_code)
-        change_code = re.sub(r'({char_types})([a-zA-Z_]\w*;?)?'.format(char_types=self.__char_types), CTokenizer.border_token("char"), change_code)
-        change_code = re.sub(r'({float_types})([a-zA-Z_]\w*;?)?'.format(float_types=self.__float_types), CTokenizer.border_token("double"), change_code)
-        change_code = re.sub(r'({int_types})([a-zA-Z_]\w*;?)?'.format(int_types=self.__int_types), CTokenizer.border_token("int"), change_code)
+            int_types=CTokenizer.INT_TYPES, char_types=CTokenizer.CHAR_TYPES, float_types=CTokenizer.FLOAT_TYPES), CTokenizer.border_token("ptr"), change_code)
+        change_code = re.sub(r'({char_types})([a-zA-Z_]\w*;?)?'.format(char_types=CTokenizer.CHAR_TYPES), CTokenizer.border_token("char"), change_code)
+        change_code = re.sub(r'({float_types})([a-zA-Z_]\w*;?)?'.format(float_types=CTokenizer.FLOAT_TYPES), CTokenizer.border_token("double"), change_code)
+        change_code = re.sub(r'({int_types})([a-zA-Z_]\w*;?)?'.format(int_types=CTokenizer.INT_TYPES), CTokenizer.border_token("int"), change_code)
         # Токенизация свитч
         change_code = re.sub(r'(case|default)[^:]*:{?', CTokenizer.border_token("if") + "{", change_code)
         # Токенизация циклов
