@@ -92,19 +92,34 @@ class CTokenizer(Tokenizer):
         change_code = re.sub(r'==|([^-]>)|<|<=|>=|!=', "$E$", change_code)
         # Токенизация присваивания
         change_code = re.sub(r'=(\{[^;]*};)?', "$A$", change_code)
-        # Удаление всех символов не соответствующих токенам
-        # change_code = re.sub(r'\([^)$]*\)', "$()$", change_code)
-        change_code = re.sub(r'[^{}NDBPCAFTMRISELUGV]*', "", change_code)
+        # Удаление всех символов не соответствующих токенам и принудительная расстановка фигурных скобок
+        change_code = re.sub(r'[^{};NDBPCAFTMRISELUGV]*', "", change_code)
+        change_code = CTokenizer.place_curly_braces_in_src(change_code)
+        change_code = re.sub(r';*', "", change_code)
         print(change_code, "\n")
 
         return change_code
 
-    def __place_curly_braces_in_token_str(self, tokens, index):
-        for i in range(index, len(tokens)):
-            if tokens[i] == "S" or tokens[i] == "I":
-                if tokens[i + 1] != "{":
-                    return self.__place_curly_braces_in_token_str(tokens[:i+1] + "{" + tokens[i+1] + "}" + tokens[i+2:], i)
-        return tokens
+    @staticmethod
+    def place_curly_braces_in_src(tokens):
+        i = count_brace = 0
+        is_need_set_brace = False
+        change_tokens = tokens
+        while True:
+            if i >= len(change_tokens):
+                return change_tokens
+            if change_tokens[i] == "I" or change_tokens[i] == "S":
+                i += 1
+                if i < len(change_tokens) and change_tokens[i] != "{":
+                    is_need_set_brace = True
+                    count_brace += 1
+                    change_tokens = change_tokens[:i] + "{" + change_tokens[i:]
+            if change_tokens[i] == ";" and is_need_set_brace is True:
+                while count_brace != 0:
+                    i += 1
+                    change_tokens = change_tokens[:i] + "}" + change_tokens[i:]
+                    count_brace -= 1
+            i += 1
 
     @staticmethod
     def replace_break_in_switch(src_without_space, begin_find=0, is_replace_last_symbol_switch=True):
