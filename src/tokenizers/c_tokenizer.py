@@ -13,87 +13,102 @@ class CTokenizer(Tokenizer):
     def keywords(self):
         return "c keywords"
 
-    # tokens C:
-    # N - Number - целое число
-    # D - Double - дробное число
-    # B - Byte - однобайтовый тип (char)
-    # P - Pointer - указатель
-    # C - Call - вызов функции
-    # A - Assign - присваивание
-    # F - Function - функция
-    # T - Type - приведение типов
-    # M - Math - математические операторы + инкремент и декремент
-    # R - Return - возврат значения из функции
-    # I - If - условные конструкции
-    # S - Series - циклы
-    # E - сравнения
-    # L - Logic - логические операции
-    # U - Upheaval - побитовые операции сдвига
-    # G - Governance - управляющие конструкции
-    # V - Var - структуры
+    BORDER = "$"
+    NOT_TOKEN = "X"         # Используется при токенизации, не является конечным токеном
+    TOKENS = {
+        "int": "N",         # - Number - целое число
+        "double": "D",      # - Double - дробное число
+        "char": "B",        # - Byte - однобайтовый тип (char)
+        "ptr": "P",         # - Pointer - указатель
+        "call": "C",        # - Call - вызов функции
+        "assign": "A",      # - Assign - присваивание
+        "func": "F",        # - Function - определение функции
+        "cast": "T",        # - Type - приведение типов
+        "math": "M",        # - Math - математические операторы + инкремент и декремент
+        "return": "R",      # - Return - возврат значения из функции
+        "if": "I",          # - If - условные конструкции
+        "cycle": "S",       # - Series - циклы
+        "compare": "E",     # - сравнения
+        "logic": "L",       # - Logic - логические операции
+        "shift": "U",       # U - Upheaval - побитовые операции сдвига
+        "control": "G",     # G - Governance - управляющие конструкции
+        "struct": "V",      # V - Var - структуры
+    }
+
+    @staticmethod
+    def token_str():
+        token_str = ""
+        for token in CTokenizer.TOKENS.values():
+            token_str += token
+        return token_str
+
+    @staticmethod
+    def border_token(token_key):
+        return CTokenizer.BORDER + CTokenizer.TOKENS[token_key] + CTokenizer.BORDER
+
     def _process(self, src):
         # Исправление названия переменной, содержащей в себе имя типа данных языка C
         main_types = "short|int|long|signed|unsigned|char|float|double"
-        change_code = re.sub(r'(\w({types}))|(({types})\w)'.format(types=main_types), "z", src)
+        change_code = re.sub(r'(\w({types}))|(({types})\w)'.format(types=main_types), CTokenizer.NOT_TOKEN, src)
         change_code = self.clear_space(change_code)
         # Замена названий переменных, которые совпадают с именами токенов
-        change_code = re.sub(r'[NDBPCAFTMRISELUGV]', "X", change_code)
+        change_code = re.sub(r'[{tokens}]'.format(tokens=CTokenizer.token_str()), CTokenizer.NOT_TOKEN, change_code)
         # Токенизация возврата из функции
-        change_code = re.sub(r'return', "$R$", change_code)
+        change_code = re.sub(r'return', CTokenizer.border_token("return"), change_code)
         # Токенизация указателей на функцию
-        change_code = re.sub(r'\w+\*?\(\*[\w\[\]]+\)\(([\w$.*\[\]]*,*)*\)', "$P$", change_code)
+        change_code = re.sub(r'\w+\*?\(\*[\w\[\]]+\)\(([\w$.*\[\]]*,*)*\)', CTokenizer.border_token("ptr"), change_code)
         # Удаление break из switch
         change_code = CTokenizer.replace_break_in_switch(change_code)
         # Удаление ключевого слова switch, чтобы оно не было токенизировано как определение функции
         change_code = re.sub(r'switch[^{]*{', "", change_code)
         # Токенизация определения функции
-        change_code = re.sub(r'([a-zA-Z_][\w*]*)\(([\w$.*\[\]]*,*)*\){', "$F${", change_code)
+        change_code = re.sub(r'([a-zA-Z_][\w*]*)\(([\w$.*\[\]]*,*)*\){', CTokenizer.border_token("func") + "{", change_code)
         # Токенизация функции, возвращающей указатель на функцию
-        change_code = re.sub(r'\w+\*?\(\*[\w\[\]]+\(([\w$.*\[\]]*,*)*\)\)\(([\w$.*\[\]]*,*)*\){', "$F${", change_code)
+        change_code = re.sub(r'\w+\*?\(\*[\w\[\]]+\(([\w$.*\[\]]*,*)*\)\)\(([\w$.*\[\]]*,*)*\){', CTokenizer.border_token("func") + "{", change_code)
         # Токенизация вызова функции
-        change_code = re.sub(r'([a-zA-Z_]\w*)\([^;!><|&]*\)(;|!=|,|==|>|<|>=|<=|&&|\|\|)', "$C$;", change_code)
+        change_code = re.sub(r'([a-zA-Z_]\w*)\([^;!><|&]*\)(;|!=|,|==|>|<|>=|<=|&&|\|\|)', CTokenizer.border_token("call") + ";", change_code)
         # Токенизация приведения типа
-        change_code = re.sub(r'\([a-zA-Z_]\w*\**\)', "$T$", change_code)
+        change_code = re.sub(r'\([a-zA-Z_]\w*\**\)', CTokenizer.border_token("cast"), change_code)
         # Токенизация указателя на структуру
-        change_code = re.sub(r'struct([a-zA-Z_]\w*;?)?\*', "$P$", change_code)
+        change_code = re.sub(r'struct([a-zA-Z_]\w*;?)?\*', CTokenizer.border_token("ptr"), change_code)
         # Токенизация структур
-        change_code = re.sub(r'(struct|union)([a-zA-Z_]\w*;?)?', "$V$", change_code)
+        change_code = re.sub(r'(struct|union)([a-zA-Z_]\w*;?)?', CTokenizer.border_token("struct"), change_code)
         # Токенизация основных типов данных
         change_code = re.sub(r'({int_types}|{char_types}|{float_types}|void)\*+([a-zA-Z_]\w*;?)?'.format(
-            int_types=self.__int_types, char_types=self.__char_types, float_types=self.__float_types), "$P$", change_code)
-        change_code = re.sub(r'({char_types})([a-zA-Z_]\w*;?)?'.format(char_types=self.__char_types), "$B$", change_code)
-        change_code = re.sub(r'({float_types})([a-zA-Z_]\w*;?)?'.format(float_types=self.__float_types), "$D$",
-                             change_code)
-        change_code = re.sub(r'({int_types})([a-zA-Z_]\w*;?)?'.format(int_types=self.__int_types), "$N$", change_code)
+            int_types=self.__int_types, char_types=self.__char_types, float_types=self.__float_types), CTokenizer.border_token("ptr"), change_code)
+        change_code = re.sub(r'({char_types})([a-zA-Z_]\w*;?)?'.format(char_types=self.__char_types), CTokenizer.border_token("char"), change_code)
+        change_code = re.sub(r'({float_types})([a-zA-Z_]\w*;?)?'.format(float_types=self.__float_types), CTokenizer.border_token("double"), change_code)
+        change_code = re.sub(r'({int_types})([a-zA-Z_]\w*;?)?'.format(int_types=self.__int_types), CTokenizer.border_token("int"), change_code)
         # Токенизация свитч
-        change_code = re.sub(r'(case|default)[^:]*:{?', "$I${", change_code)
+        change_code = re.sub(r'(case|default)[^:]*:{?', CTokenizer.border_token("if") + "{", change_code)
         # Токенизация циклов
-        change_code = re.sub(r'do', "$S$", change_code)
+        change_code = re.sub(r'do', CTokenizer.border_token("cycle"), change_code)
         change_code = re.sub(r'while\([^;]*\);', "", change_code)
-        change_code = re.sub(r'(for|while)\([^)]*\)', "$S$", change_code)
+        change_code = re.sub(r'(for|while)\([^)]*\)', CTokenizer.border_token("cycle"), change_code)
         # Токенизация управляющих конструкций
-        change_code = re.sub(r'continue|break|goto', "$G$", change_code)
+        change_code = re.sub(r'continue|break|goto', CTokenizer.border_token("control"), change_code)
         # Токенизация условных конструкций
-        change_code = re.sub(r'(((if|elseif)\([^)]*\))|else)', "$I$", change_code)
+        change_code = re.sub(r'(((if|elseif)\([^)]*\))|else)', CTokenizer.border_token("if"), change_code)
         # Токенизация сочетаний оператора присваивания
-        change_code = re.sub(r'[+\-*/%]=', "$A$$M$", change_code)
-        change_code = re.sub(r'(<<|>>|&|\^|\|)=', "$A$$U$", change_code)
+        change_code = re.sub(r'[+\-*/%]=', CTokenizer.border_token("assign") + CTokenizer.border_token("math"), change_code)
+        change_code = re.sub(r'(<<|>>|&|\^|\|)=', CTokenizer.border_token("assign") + CTokenizer.border_token("shift"), change_code)
         # Токенизация математических выражений
-        change_code = re.sub(r'(([a-zA-Z_]\w*)\+\+)|(\+\+[a-zA-Z_]\w*)', "$M$", change_code)
-        change_code = re.sub(r'(([a-zA-Z_]\w*)--)|(--[a-zA-Z_]\w*)', "$M$", change_code)
-        change_code = re.sub(r'[^={},(]\*', "$M$", change_code)
-        change_code = re.sub(r'[^={}><|&][+\-/%][^>]', "$M$", change_code)
+        change_code = re.sub(r'(([a-zA-Z_]\w*)\+\+)|(\+\+[a-zA-Z_]\w*)', CTokenizer.border_token("math"), change_code)
+        change_code = re.sub(r'(([a-zA-Z_]\w*)--)|(--[a-zA-Z_]\w*)', CTokenizer.border_token("math"), change_code)
+        change_code = re.sub(r'[^={},(]\*', CTokenizer.border_token("math"), change_code)
+        change_code = re.sub(r'[^={}><|&][+\-/%][^>]', CTokenizer.border_token("math"), change_code)
         # Токенизация логических операций
-        change_code = re.sub(r'&&|\|\||!', "$L$", change_code)
+        change_code = re.sub(r'&&|\|\||!', CTokenizer.border_token("logic"), change_code)
         # Токенизация побитовых операций
-        change_code = re.sub(r'[^={}><|&](<<|>>|&|\^|\|)', "$U$", change_code)
-        change_code = re.sub(r'~', "$U$", change_code)
+        change_code = re.sub(r'[^={}><|&](<<|>>|&|\^|\|)', CTokenizer.border_token("shift"), change_code)
+        change_code = re.sub(r'~', CTokenizer.border_token("shift"), change_code)
         # Токенизация сравнений
-        change_code = re.sub(r'==|([^-]>)|<|<=|>=|!=', "$E$", change_code)
+        change_code = re.sub(r'==|([^-]>)|<|<=|>=|!=', CTokenizer.border_token("compare"), change_code)
         # Токенизация присваивания
-        change_code = re.sub(r'=(\{[^;]*};)?', "$A$", change_code)
+        change_code = re.sub(r'=(\{[^;]*};)?', CTokenizer.border_token("assign"), change_code)
         # Удаление всех символов не соответствующих токенам и принудительная расстановка фигурных скобок
-        change_code = re.sub(r'[^{};NDBPCAFTMRISELUGV]*', "", change_code)
+        needed_symbols = r'[^{};' + r'{tokens}'.format(tokens=CTokenizer.token_str()) + r']*'
+        change_code = re.sub(needed_symbols, "", change_code)
         change_code = CTokenizer.place_curly_braces_in_src(change_code)
         change_code = re.sub(r';*', "", change_code)
         print(change_code, "\n")
@@ -108,7 +123,7 @@ class CTokenizer(Tokenizer):
         while True:
             if i >= len(change_tokens):
                 return change_tokens
-            if change_tokens[i] == "I" or change_tokens[i] == "S":
+            if change_tokens[i] == CTokenizer.TOKENS["if"] or change_tokens[i] == CTokenizer.TOKENS["cycle"]:
                 i += 1
                 if i < len(change_tokens) and change_tokens[i] != "{":
                     is_need_set_brace = True
@@ -129,7 +144,7 @@ class CTokenizer(Tokenizer):
             change_src = src_without_space
             if end_switch is not None:
                 temp_str = src_without_space[index:end_switch+1]
-                temp_str = re.sub(r'break;}?', "aaaaa;}", temp_str)
+                temp_str = re.sub(r'break;}?', CTokenizer.NOT_TOKEN * 5 + ";}", temp_str)
                 change_src = src_without_space[:index] + temp_str + src_without_space[end_switch+1:]
                 if is_replace_last_symbol_switch is True:
                     change_src = change_src[:end_switch] + ";" + change_src[end_switch+1:]
