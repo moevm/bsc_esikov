@@ -152,14 +152,13 @@ class CTokenizer(Tokenizer):
                     return i
         return None
 
-    def _clear_import(self, src):
+    @staticmethod
+    def clear_import(src):
         result = re.sub(r'\s*#include\s*[<"].*[>"]\s*', "", src)
         return result
 
-    def _clear_special_characters(self, src):
-        return src
-
-    def _clear_comments(self, src):
+    @staticmethod
+    def clear_comments(src):
         result = re.sub(r'//\s*.*(\n|$)', "", src)
         result = re.sub(r'//*(.|\n)*/*/', "", result)
         return result

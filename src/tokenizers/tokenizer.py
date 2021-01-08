@@ -9,29 +9,23 @@ class Tokenizer(ABC):
         pass
 
     def tokenize(self, src):
-        #src_without_space = self.clear_space(src)
-        #src_without_import = self._clear_import(src_without_space)
-        src_without_import = self._clear_import(src)
-        src_without_comments = self._clear_comments(src_without_import)
+        src_without_import = self.clear_import(src)
+        src_without_comments = self.clear_comments(src_without_import)
         src_after_processing = self._process(src_without_comments)
-        #src_without_space = src_after_processing    # Tokenizer.clear_space(src_after_processing)
-        #return src_without_space
         return src_after_processing
 
     @abstractmethod
     def _process(self, src):
         pass
 
+    @staticmethod
     @abstractmethod
-    def _clear_import(self, src):
+    def clear_import(src):
         pass
 
+    @staticmethod
     @abstractmethod
-    def _clear_special_characters(self, src):
-        pass
-
-    @abstractmethod
-    def _clear_comments(self, src):
+    def clear_comments(src):
         pass
 
     @staticmethod
