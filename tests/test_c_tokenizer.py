@@ -166,6 +166,24 @@ class TestCTokenizer(unittest.TestCase):
         replace_str = "while(x < 10) x += 1;"
         self.assertEqual(CTokenizer.replace_break_in_switch(replace_str), replace_str)
 
+    def test_place_curly_braces_in_src(self):
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("IR;"), "I{R;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("I{R;}"), "I{R;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("IR;IR;IR;"), "I{R;}I{R;}I{R;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("I{R;}I{R;}I{R;}"), "I{R;}I{R;}I{R;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("SC;"), "S{C;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{C;}"), "S{C;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("SC;"), "S{C;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{C;}"), "S{C;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("SAM;"), "S{AM;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{AM;}"), "S{AM;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("SIAM;"), "S{I{AM;}}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{I{AM;}}"), "S{I{AM;}}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{IAM;}"), "S{I{AM;}}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("SI{AM;}"), "S{I{AM;}}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("SC;SC;"), "S{C;}S{C;}")
+        self.assertEqual(CTokenizer.place_curly_braces_in_src("SIAM;SIAM;"), "S{I{AM;}}S{I{AM;}}")
+
 
 if __name__ == '__main__':
     unittest.main()
