@@ -3,11 +3,6 @@ import re
 
 
 class Tokenizer(ABC):
-    @property
-    @abstractmethod
-    def keywords(self):
-        pass
-
     def tokenize(self, src):
         src_without_import = self.clear_import(src)
         src_without_comments = self.clear_comments(src_without_import)

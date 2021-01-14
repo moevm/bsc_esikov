@@ -8,7 +8,7 @@ class TestCTokenizer(unittest.TestCase):
         self.switch_str = 'switch(x) { case 1: { printf("x = 1"); break; } case 2: printf("x = 2"); break; ' \
                           'default: { printf("x is undefined"); break;}}'
 
-    def test__clear_comments(self):
+    def test_clear_comments(self):
         self.assertEqual(CTokenizer.clear_comments(""), "")
         self.assertEqual(CTokenizer.clear_comments("//comment"), "")
         self.assertEqual(CTokenizer.clear_comments("// comment"), "")
@@ -24,7 +24,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(CTokenizer.clear_comments("/*int x = 0; float y = 1.0; */"), "")
         self.assertEqual(CTokenizer.clear_comments("/*int x = 0;\nfloat y = 1.0;\n*/"), "")
 
-    def test__clear_import(self):
+    def test_clear_import(self):
         self.assertEqual(CTokenizer.clear_import("#include <stdio.h>"), "")
         self.assertEqual(CTokenizer.clear_import(' #include "max.h"  '), "")
         self.assertEqual(CTokenizer.clear_import('#include <stdio.h>\n#include "max.h"'), "")
@@ -68,6 +68,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(self.tokenizer.tokenize("while(x < 10) x += 1;"), "S{AM}")
         self.assertEqual(self.tokenizer.tokenize("for(int i = 0; i < 10; i++) compare(func(i), 0);"), "S{C}")
         self.assertEqual(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x;"), "S{I{AM}}")
+        self.assertEqual(self.tokenizer.tokenize("while(x = func(x)) if(x % 2 == 0) y += x;"), "S{I{AM}}")
         # self.assertEqual(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x; else return 0;"), "SIAMIR")
         self.assertEqual(self.tokenizer.tokenize('do i--; while (i > 0);'), "S{M}")
         self.assertEqual(self.tokenizer.tokenize('do if (i > 10) break; while (i > 0);'), "S{I{G}}")

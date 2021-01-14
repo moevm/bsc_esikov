@@ -10,11 +10,6 @@ class CTokenizer(Tokenizer):
                      "short", "int"]).replace(" ", "")
     CHAR_TYPES = "|".join(["signed char", "unsigned char", "char"]).replace(" ", "")
     FLOAT_TYPES = "|".join(["long double", "double", "float"]).replace(" ", "")
-
-    @property
-    def keywords(self):
-        return "c keywords"
-
     BORDER = "$"
     NOT_TOKEN = "X"         # Используется при токенизации, не является конечным токеном
     TOKENS = {
@@ -32,9 +27,9 @@ class CTokenizer(Tokenizer):
         "cycle": "S",       # - Series - циклы
         "compare": "E",     # - сравнения
         "logic": "L",       # - Logic - логические операции
-        "shift": "U",       # U - Upheaval - побитовые операции сдвига
-        "control": "G",     # G - Governance - управляющие конструкции
-        "struct": "V",      # V - Var - структуры
+        "shift": "U",       # - Upheaval - побитовые операции сдвига
+        "control": "G",     # - Governance - управляющие конструкции
+        "struct": "V",      # - Var - структуры
     }
 
     @staticmethod
@@ -68,7 +63,7 @@ class CTokenizer(Tokenizer):
         # Токенизация функции, возвращающей указатель на функцию
         change_code = re.sub(r'\w+\*?\(\*[\w\[\]]+\(([\w$.*\[\]]*,*)*\)\)\(([\w$.*\[\]]*,*)*\){', CTokenizer.border_token("func") + "{", change_code)
         # Токенизация вызова функции
-        change_code = re.sub(r'([a-zA-Z_]\w*)\([^;!><|&]*\)(;|!=|,|==|>|<|>=|<=|&&|\|\|)', CTokenizer.border_token("call") + ";", change_code)
+        change_code = re.sub(r'([a-zA-Z_]\w*)\([^;!><|&]*\);', CTokenizer.border_token("call") + ";", change_code)
         # Токенизация приведения типа
         change_code = re.sub(r'\([a-zA-Z_]\w*\**\)', CTokenizer.border_token("cast"), change_code)
         # Токенизация указателя на структуру
@@ -83,14 +78,15 @@ class CTokenizer(Tokenizer):
         change_code = re.sub(r'({int_types})([a-zA-Z_]\w*;?)?'.format(int_types=CTokenizer.INT_TYPES), CTokenizer.border_token("int"), change_code)
         # Токенизация свитч
         change_code = re.sub(r'(case|default)[^:]*:{?', CTokenizer.border_token("if") + "{", change_code)
+        # Токенизация условных конструкций
+        change_code = re.sub(r'(((if|elseif)\([^)]*\))|else)', CTokenizer.border_token("if"), change_code)
         # Токенизация циклов
         change_code = re.sub(r'do', CTokenizer.border_token("cycle"), change_code)
         change_code = re.sub(r'while\([^;]*\);', "", change_code)
-        change_code = re.sub(r'(for|while)\([^)]*\)', CTokenizer.border_token("cycle"), change_code)
+        change_code = re.sub(r'(for|while)\([^{}]*\){', CTokenizer.border_token("cycle") + "{", change_code)
+        change_code = re.sub(r'(for|while)\([^{}]*\)[\w$]', CTokenizer.border_token("cycle") + CTokenizer.NOT_TOKEN, change_code)
         # Токенизация управляющих конструкций
         change_code = re.sub(r'continue|break|goto', CTokenizer.border_token("control"), change_code)
-        # Токенизация условных конструкций
-        change_code = re.sub(r'(((if|elseif)\([^)]*\))|else)', CTokenizer.border_token("if"), change_code)
         # Токенизация сочетаний оператора присваивания
         change_code = re.sub(r'[+\-*/%]=', CTokenizer.border_token("assign") + CTokenizer.border_token("math"), change_code)
         change_code = re.sub(r'(<<|>>|&|\^|\|)=', CTokenizer.border_token("assign") + CTokenizer.border_token("shift"), change_code)
@@ -107,7 +103,7 @@ class CTokenizer(Tokenizer):
         # Токенизация сравнений
         change_code = re.sub(r'==|([^-]>)|<|<=|>=|!=', CTokenizer.border_token("compare"), change_code)
         # Токенизация присваивания
-        change_code = re.sub(r'=(\{[^;]*};)?', CTokenizer.border_token("assign"), change_code)
+        change_code = re.sub(r'=({[^;]*};)?', CTokenizer.border_token("assign"), change_code)
         # Удаление всех символов не соответствующих токенам и принудительная расстановка фигурных скобок
         needed_symbols = r'[^{};' + r'{tokens}'.format(tokens=CTokenizer.token_str()) + r']*'
         change_code = re.sub(needed_symbols, "", change_code)
@@ -120,7 +116,6 @@ class CTokenizer(Tokenizer):
     @staticmethod
     def place_curly_braces_in_src(tokens):
         i = count_brace = 0
-        is_need_set_brace = False
         change_tokens = tokens
         while True:
             if i >= len(change_tokens):
@@ -128,10 +123,9 @@ class CTokenizer(Tokenizer):
             if change_tokens[i] == CTokenizer.TOKENS["if"] or change_tokens[i] == CTokenizer.TOKENS["cycle"]:
                 i += 1
                 if i < len(change_tokens) and change_tokens[i] != "{":
-                    is_need_set_brace = True
                     count_brace += 1
                     change_tokens = change_tokens[:i] + "{" + change_tokens[i:]
-            if change_tokens[i] == ";" and is_need_set_brace is True:
+            if change_tokens[i] == ";" and count_brace != 0:
                 while count_brace != 0:
                     i += 1
                     change_tokens = change_tokens[:i] + "}" + change_tokens[i:]
