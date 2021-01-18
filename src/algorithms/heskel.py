@@ -1,0 +1,18 @@
+from src.algorithms.plagiarism_src_detector import PlagiarismSrcDetector
+
+
+class Heskel(PlagiarismSrcDetector):
+    def __init__(self, token_str):
+        self.__token_str = token_str
+        self.__length_n_gramm = 2
+        self.__n_gramms = self.__split_into_n_gramms(self.__token_str, self.__length_n_gramm)
+
+    def search(self, check_tokens_str):
+        check_str_n_gramms = self.__split_into_n_gramms(check_tokens_str, self.__length_n_gramm)
+        return round(len(self.__n_gramms & check_str_n_gramms) / len(self.__n_gramms | check_str_n_gramms) * 100)
+
+    def __split_into_n_gramms(self, token_str, length_n_gramm):
+        n_gramms = []
+        for i in range(len(token_str) - length_n_gramm + 1):
+            n_gramms.append(token_str[i:i + length_n_gramm])
+        return set(n_gramms)
