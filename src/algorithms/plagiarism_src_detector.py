@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 
 class PlagiarismSrcDetector(ABC):
-    @staticmethod
     @abstractmethod
-    def search(first, second):
+    def search(self, check_tokens_str):
         pass
