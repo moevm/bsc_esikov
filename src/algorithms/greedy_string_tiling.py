@@ -35,7 +35,7 @@ class GreedyStringTiling(PlagiarismSrcDetector):
 
     @staticmethod
     def is_marked_match(marked_string_dict, begin, length):
-        for i in range(length):
-            if begin + i in marked_string_dict:
-                return True
-        return False
+        if begin in marked_string_dict or begin + length - 1 in marked_string_dict:
+            return True
+        else:
+            return False
