@@ -2,6 +2,7 @@ import unittest
 import tests.test_c_tokenizer as test_c_tokenizer
 import tests.test_tokenizer as test_tokenizer
 import tests.test_heskel as test_heskel
+import tests.test_greedy_string_tiling as test_greedy_string_tiling
 
 
 if __name__ == '__main__':
@@ -10,6 +11,7 @@ if __name__ == '__main__':
         testLoad.loadTestsFromModule(test_c_tokenizer),
         testLoad.loadTestsFromModule(test_tokenizer),
         testLoad.loadTestsFromModule(test_heskel),
+        testLoad.loadTestsFromModule(test_greedy_string_tiling),
     ]
     suites = unittest.TestSuite(suites_list)
     runner = unittest.TextTestRunner(verbosity=2)
