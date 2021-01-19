@@ -7,8 +7,8 @@ class Heskel(PlagiarismSrcDetector):
         self.__length_n_gramm = 2
         self.__n_gramms = self.split_into_n_gramms(self.__token_str, self.__length_n_gramm)
 
-    def search(self, check_tokens_str):
-        check_str_n_gramms = self.split_into_n_gramms(check_tokens_str, self.__length_n_gramm)
+    def search(self, search_tokens_str):
+        check_str_n_gramms = self.split_into_n_gramms(search_tokens_str, self.__length_n_gramm)
         return round(len(self.__n_gramms & check_str_n_gramms) / len(self.__n_gramms | check_str_n_gramms) * 100)
 
     @staticmethod
