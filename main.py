@@ -13,7 +13,7 @@ if __name__ == "__main__":
             src = srcFile.read()
             print(src)
             tokenizer = CTokenizer()
-            print(tokenizer.tokenize(src))
+            print(tokenizer.fast_tokenize(src))
     except FileNotFoundError as e:
         print("Введённый файл не найден: " + SEARCH_FILE_NAME)
     except UnicodeDecodeError as e:

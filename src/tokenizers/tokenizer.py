@@ -3,14 +3,34 @@ import re
 
 
 class Tokenizer(ABC):
-    def tokenize(self, src):
+    def fast_tokenize(self, src):
         src_without_import = self.clear_import(src)
         src_without_comments = self.clear_comments(src_without_import)
-        src_after_processing = self._process(src_without_comments)
-        return src_after_processing
+        token_string = self._fast_process(src_without_comments)
+        return token_string
+
+    def tokenize(self, src):
+        src_with_replace_import = self.replace_import(src)
+        src_with_replace_comments = self.replace_comments(src_with_replace_import)
+        tokens = self._process(src_with_replace_comments)
+        return tokens
 
     @abstractmethod
     def _process(self, src):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def replace_import(src):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def replace_comments(src):
+        pass
+
+    @abstractmethod
+    def _fast_process(self, src):
         pass
 
     @staticmethod
