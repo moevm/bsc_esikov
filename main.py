@@ -13,8 +13,11 @@ if __name__ == "__main__":
 
     SEARCH_FILE_PATH = parameters.file
     SEARCH_DIR = parameters.dir
+    try:
+        LIMIT = int(parameters.limit)
+    except ValueError as e:
+        print("Введённое предельное значение не является числом: " + parameters.limit)
     FILE_EXTENSION = "c"
-    LIMIT = 60
 
     try:
         with open(SEARCH_FILE_PATH, "r", encoding="utf-8") as srcFile:
