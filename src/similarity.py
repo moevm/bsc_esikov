@@ -26,3 +26,7 @@ class Similarity:
     @property
     def detected_file_path(self):
         return self.__detected_file.path
+
+    @property
+    def similarity_percentage(self):
+        return self.__detected_file.similarity_percentage

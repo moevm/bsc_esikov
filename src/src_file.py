@@ -7,6 +7,7 @@ class SrcFile:
         self.__path = path
         self.__src = src
         self.__tokens = []
+        self.__similarity_percentage = 0
 
     @property
     def name(self):
@@ -31,3 +32,11 @@ class SrcFile:
     @property
     def tokens_str(self):
         return Token.get_tokens_str_from_token_list(self.__tokens)
+
+    @property
+    def similarity_percentage(self):
+        return self.__similarity_percentage
+
+    @similarity_percentage.setter
+    def similarity_percentage(self, similarity_percentage):
+        self.__similarity_percentage = similarity_percentage
