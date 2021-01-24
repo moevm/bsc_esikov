@@ -2,9 +2,9 @@ from src.algorithms.plagiarism_src_detector import PlagiarismSrcDetector
 
 
 class Heskel(PlagiarismSrcDetector):
-    def __init__(self, token_str):
+    def __init__(self, token_str, length_n_gramm=4):
         self.__token_str = token_str
-        self.__length_n_gramm = 2
+        self.__length_n_gramm = length_n_gramm
         self.__n_gramms = self.split_into_n_gramms(self.__token_str, self.__length_n_gramm)
 
     def search(self, search_tokens_str):

@@ -11,7 +11,7 @@ class TestGreedyStringTiling(unittest.TestCase):
         self.assertFalse(GreedyStringTiling.is_marked_match({2: 10}, 3, 8))
 
     def test_search(self):
-        greedy = GreedyStringTiling("ABCDE")
+        greedy = GreedyStringTiling("ABCDE", min_match_len=2)
         self.assertListEqual(greedy.search("ABCDEFGH"), ["ABCDE"])
         self.assertListEqual(greedy.search("ABCDE"), ["ABCDE"])
         self.assertListEqual(greedy.search("XYZBCD"), ["BCD"])
@@ -19,9 +19,14 @@ class TestGreedyStringTiling(unittest.TestCase):
         self.assertListEqual(sorted(greedy.search("XYABZWCDERR")), ["AB", "CDE"])
         self.assertListEqual(sorted(greedy.search("XYABZWCDRERR")), ["AB", "CD"])
         self.assertListEqual(greedy.search("ABCABC"), ["ABC"])
-        greedy = GreedyStringTiling("I{AMAM}")
+        greedy = GreedyStringTiling("ABCDE", min_match_len=4)
+        self.assertListEqual(greedy.search("ABCDE"), ["ABCDE"])
+        self.assertListEqual(sorted(greedy.search("XYABZWCDERR")), [])
+        greedy = GreedyStringTiling("I{AMAM}", min_match_len=2)
         self.assertListEqual(greedy.search("I{AMAM}"), ["I{AMAM}"])
         self.assertListEqual(sorted(greedy.search("I{AMR}AM")), ["AM", "I{AM"])
+        greedy = GreedyStringTiling("I{AMAM}", min_match_len=4)
+        self.assertListEqual(sorted(greedy.search("I{AMR}AM")), ["I{AM"])
 
 
 if __name__ == '__main__':

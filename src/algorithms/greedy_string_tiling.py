@@ -2,9 +2,9 @@ from src.algorithms.plagiarism_src_detector import PlagiarismSrcDetector
 
 
 class GreedyStringTiling(PlagiarismSrcDetector):
-    def __init__(self, token_str):
+    def __init__(self, token_str, min_match_len=4):
         self.__token_str = token_str
-        self.__min_match_len = 2
+        self.__min_match_len = min_match_len
 
     def search(self, search_tokens_str):
         tiles = []

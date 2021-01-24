@@ -15,16 +15,18 @@ class TestHeskel(unittest.TestCase):
         self.assertSetEqual(Heskel.split_into_n_gramms("ABCDEF", 7), set())
 
     def test_search(self):
-        heskel = Heskel("ABCDEFGHIJ")
+        heskel = Heskel("ABCDEFGHIJ", length_n_gramm=2)
         self.assertEqual(heskel.search("ABCDEFGHIJ"), 100)
         self.assertEqual(heskel.search("KLMNOPQRST"), 0)
         self.assertEqual(heskel.search("ABCDEFGHIZ"), round((8 / 10) * 100))
         self.assertEqual(heskel.search("ABCDEFGHZZ"), round((7 / 11) * 100))
         self.assertEqual(heskel.search("ABCDEZZZZZ"), round((4 / 11) * 100))
         self.assertEqual(heskel.search("ABCDEVWXYZ"), round((4 / 14) * 100))
-        heskel = Heskel("S{AM}R")
+        heskel = Heskel("S{AM}R", length_n_gramm=2)
         self.assertEqual(heskel.search("S{AM}A"), round((4 / 6) * 100))
-        heskel = Heskel("S{I{AM}}A")
+        heskel = Heskel("S{AM}R", length_n_gramm=4)
+        self.assertEqual(heskel.search("S{AM}A"), round((2 / 4) * 100))
+        heskel = Heskel("S{I{AM}}A", length_n_gramm=2)
         self.assertEqual(heskel.search("S{I{AR}}R"), round((5 / 11) * 100))
 
 
