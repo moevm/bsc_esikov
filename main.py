@@ -1,6 +1,8 @@
 from src import argv_parser
 from src.tokenizers.c_tokenizer import CTokenizer
 from src.console.dir_scanner import DirScanner
+from src.algorithms.heskel import Heskel
+from src.algorithms.greedy_string_tiling import GreedyStringTiling
 
 
 if __name__ == "__main__":
@@ -8,6 +10,7 @@ if __name__ == "__main__":
     SEARCH_FILE_NAME = parameters.file
     SEARCH_DIR = parameters.dir
     FILE_EXTENSION = "c"
+    LIMIT = 60
     try:
         with open(SEARCH_FILE_NAME, "r", encoding="utf-8") as srcFile:
             src = srcFile.read()
@@ -22,6 +25,23 @@ if __name__ == "__main__":
         print("Введённый параметр не является файлом: " + SEARCH_FILE_NAME)
     scanner = DirScanner(FILE_EXTENSION)
     files = scanner.scan(SEARCH_DIR)
-    print(len(files))
-    for file in files:
-        print(file.name)
+    heskel_algo = Heskel(tokenizer.fast_tokenize(src))
+    greedy_algo = GreedyStringTiling(tokenizer.fast_tokenize(src))
+
+    # similarity_files = []
+    # for file in files:
+    #     print("new file")
+    #     print(file.path)
+    #     similarity_percentage = heskel_algo.search(tokenizer.fast_tokenize(file.src))
+    #     if similarity_percentage > LIMIT:
+    #         print(file.name)
+    #         similarity_files.append(file)
+    # print("end heskel")
+    #
+    # for file in similarity_files:
+    #     similarity_strings = greedy_algo.search(tokenizer.tokenize(file.src))
+    #     print(file.name)
+
+    # print(len(files))
+    # for file in files:
+    #     print(file.name)

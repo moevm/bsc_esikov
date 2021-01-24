@@ -258,14 +258,11 @@ class TestCTokenizer(unittest.TestCase):
         self.tokenize_basic_test_case(self.tokenizer.fast_tokenize)
 
     def test_tokenize(self):
-        self.tokenize_basic_test_case(self.get_tokens_str_from_tokens_list)
+        self.tokenize_basic_test_case(self.tokenize_runner)
 
-    def get_tokens_str_from_tokens_list(self, src):
+    def tokenize_runner(self, src):
         tokens = self.tokenizer.tokenize(src)
-        token_str = ""
-        for token in sorted(tokens, key=lambda tok: tok.start):
-            token_str += token.symbol
-        return token_str
+        return Token.get_tokens_str_from_token_list(tokens)
 
     def assert_tokens_list(self, current, true):
         self.assertEqual(len(current), len(true))

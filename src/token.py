@@ -15,3 +15,10 @@ class Token:
     @property
     def end(self):
         return self.__end
+
+    @staticmethod
+    def get_tokens_str_from_token_list(token_list):
+        token_str = ""
+        for token in sorted(token_list, key=lambda tok: tok.start):
+            token_str += token.symbol
+        return token_str
