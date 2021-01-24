@@ -28,20 +28,20 @@ class TestCTokenizer(unittest.TestCase):
 
     def test_replace_comments(self):
         self.assertEqual(CTokenizer.replace_comments(""), "")
-        self.assertEqual(CTokenizer.replace_comments("//comment"), CTokenizer.NOT_TOKEN * 9)
-        self.assertEqual(CTokenizer.replace_comments("// comment"), CTokenizer.NOT_TOKEN * 10)
-        self.assertEqual(CTokenizer.replace_comments("//comment\n"), CTokenizer.NOT_TOKEN * 10)
-        self.assertEqual(CTokenizer.replace_comments("// comment\n"), CTokenizer.NOT_TOKEN * 11)
-        self.assertEqual(CTokenizer.replace_comments("//  comment //comment"), CTokenizer.NOT_TOKEN * 21)
-        self.assertEqual(CTokenizer.replace_comments("int x = 0; // integer x is 0"), "int x = 0; " + CTokenizer.NOT_TOKEN * 17)
-        self.assertEqual(CTokenizer.replace_comments("// integer x is 0\nint x = 0;"), CTokenizer.NOT_TOKEN * 18 + "int x = 0;")
-        self.assertEqual(CTokenizer.replace_comments("//comment1\nint x = 0;\n// comment2"), CTokenizer.NOT_TOKEN * 11 + "int x = 0;\n" + CTokenizer.NOT_TOKEN * 11)
-        self.assertEqual(CTokenizer.replace_comments("/*comment*/"), CTokenizer.NOT_TOKEN * 11)
-        self.assertEqual(CTokenizer.replace_comments("/* comment */"), CTokenizer.NOT_TOKEN * 13)
-        self.assertEqual(CTokenizer.replace_comments(" /* comment */ "), " " + CTokenizer.NOT_TOKEN * 13 + " ")
-        self.assertEqual(CTokenizer.replace_comments("/*int x = 0; float y = 1.0; */"), CTokenizer.NOT_TOKEN * 30)
-        self.assertEqual(CTokenizer.replace_comments("/*int x = 0;\nfloat y = 1.0;\n*/"), CTokenizer.NOT_TOKEN * 30)
-        self.assertEqual(CTokenizer.replace_comments("/*\nint x = 0;\n*/\nfloat y = 1.0;\n/*\nint x = 0;\n*/"), CTokenizer.NOT_TOKEN * 16 + "\nfloat y = 1.0;\n" + CTokenizer.NOT_TOKEN * 16)
+        self.assertEqual(CTokenizer.replace_comments("//comment"), " " * 9)
+        self.assertEqual(CTokenizer.replace_comments("// comment"), " " * 10)
+        self.assertEqual(CTokenizer.replace_comments("//comment\n"), " " * 10)
+        self.assertEqual(CTokenizer.replace_comments("// comment\n"), " " * 11)
+        self.assertEqual(CTokenizer.replace_comments("//  comment //comment"), " " * 21)
+        self.assertEqual(CTokenizer.replace_comments("int x = 0; // integer x is 0"), "int x = 0; " + " " * 17)
+        self.assertEqual(CTokenizer.replace_comments("// integer x is 0\nint x = 0;"), " " * 18 + "int x = 0;")
+        self.assertEqual(CTokenizer.replace_comments("//comment1\nint x = 0;\n// comment2"), " " * 11 + "int x = 0;\n" + " " * 11)
+        self.assertEqual(CTokenizer.replace_comments("/*comment*/"), " " * 11)
+        self.assertEqual(CTokenizer.replace_comments("/* comment */"), " " * 13)
+        self.assertEqual(CTokenizer.replace_comments(" /* comment */ "), " " + " " * 13 + " ")
+        self.assertEqual(CTokenizer.replace_comments("/*int x = 0; float y = 1.0; */"), " " * 30)
+        self.assertEqual(CTokenizer.replace_comments("/*int x = 0;\nfloat y = 1.0;\n*/"), " " * 30)
+        self.assertEqual(CTokenizer.replace_comments("/*\nint x = 0;\n*/\nfloat y = 1.0;\n/*\nint x = 0;\n*/"), " " * 16 + "\nfloat y = 1.0;\n" + " " * 16)
 
     def test_clear_import(self):
         self.assertEqual(CTokenizer.clear_import("#include <stdio.h>"), "")
@@ -51,11 +51,11 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(CTokenizer.clear_import('#include <stdio.h>\n#include "max.h"\nint x = 0 ; \n'), "int x = 0 ; \n")
 
     def test_replace_import(self):
-        self.assertEqual(CTokenizer.replace_import("#include <stdio.h>"), CTokenizer.NOT_TOKEN * 18)
-        self.assertEqual(CTokenizer.replace_import(' #include "max.h"  '), " " + CTokenizer.NOT_TOKEN * 16 + "  ")
-        self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"'), CTokenizer.NOT_TOKEN * 18 + "\n" + CTokenizer.NOT_TOKEN * 16)
-        self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\n'), CTokenizer.NOT_TOKEN * 18 + "\n" + CTokenizer.NOT_TOKEN * 16 + "\n")
-        self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\nint x = 0 ; \n'), CTokenizer.NOT_TOKEN * 18 + "\n" + CTokenizer.NOT_TOKEN * 16 + "\nint x = 0 ; \n")
+        self.assertEqual(CTokenizer.replace_import("#include <stdio.h>"), " " * 18)
+        self.assertEqual(CTokenizer.replace_import(' #include "max.h"  '), " " + " " * 16 + "  ")
+        self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"'), " " * 18 + "\n" + " " * 16)
+        self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\n'), " " * 18 + "\n" + " " * 16 + "\n")
+        self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\nint x = 0 ; \n'), " " * 18 + "\n" + " " * 16 + "\nint x = 0 ; \n")
 
     def test_find_index_end_switch(self):
         self.assertEqual(CTokenizer.find_index_end_switch(CTokenizer.clear_space(self.switch_str)), 103)

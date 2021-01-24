@@ -188,15 +188,15 @@ class CTokenizer(Tokenizer):
     @staticmethod
     def replace_comments(src):
         comment_tokens = CTokenizer.search_tokens(src, r'//[^\n]*(\n|$)', "control", re.ASCII + re.MULTILINE)
-        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, CTokenizer.NOT_TOKEN, True)
+        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, " ", True)
         comment_tokens = CTokenizer.search_tokens(src, r'/\*.*?\*/', "control", re.ASCII + re.DOTALL)
-        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, CTokenizer.NOT_TOKEN, True)
+        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, " ", True)
         return src
 
     @staticmethod
     def replace_import(src):
         import_tokens = CTokenizer.search_tokens(src, r'#include\s*[<"][^<>"]+[>"]', "control", re.ASCII)
-        src = CTokenizer.replace_tokens_in_src(src, import_tokens, CTokenizer.NOT_TOKEN, True)
+        src = CTokenizer.replace_tokens_in_src(src, import_tokens, " ", True)
         return src
 
     def _process(self, src):
@@ -205,13 +205,13 @@ class CTokenizer(Tokenizer):
         tokens += CTokenizer.search_tokens(src, r'\breturn\s*;?', "return")
 
         # Токенизация указателей на функцию
-        regex_for_func_ptr = r'\w+(\s*\*?\s*)*\((\s*\*\s*)+[\w\[\]]+\s*\)\s*\([^;=]*\)\s*[;=]'
+        regex_for_func_ptr = r'\w+(\s*\*\s*)*\s*\((\s*\*\s*)+[\w+\[\]]+\s*\)\s*\([^=;]*\)\s*[;=]'
         function_pointer_tokens = CTokenizer.search_tokens(src, regex_for_func_ptr, "ptr")
         src = CTokenizer.replace_tokens_in_src(src, function_pointer_tokens)
         tokens += function_pointer_tokens
 
         # Токенизация определения функции, возвращающей указатель на функцию
-        regex_for_func_def = r'\w+(\s*\*?\s*)*\((\s*\*?\s*)*\w+\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{'
+        regex_for_func_def = r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*\w+\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{'
         function_tokens = CTokenizer.search_tokens(src, regex_for_func_def, "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
         tokens += function_tokens
@@ -240,8 +240,13 @@ class CTokenizer(Tokenizer):
                 src = src[:token.end - 1] + "{" + src[token.end:]
         tokens += case_tokens
 
+        # Токенизация условных конструкций
+        if_else_tokens = CTokenizer.search_tokens(src, r'((if|else\s*if)\s*\([^{};]*\)\s*[{|\w])|else', "if")
+        src = CTokenizer.replace_tokens_in_src(src, if_else_tokens)
+        tokens += if_else_tokens
+
         # Токенизация определения функции
-        function_tokens = CTokenizer.search_tokens(src, r'\w+(\s*\*?\s*)*\s+\w+\s*\([^{]*\)\s*{', "func")
+        function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)*|\s+)\w+\s*\([^{]*\)\s*{', "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
         tokens += function_tokens
 
@@ -284,11 +289,6 @@ class CTokenizer(Tokenizer):
         regex_for_int = r'({int_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*[;=]'\
                         .format(int_types=CTokenizer.INT_TYPES)
         tokens += CTokenizer.search_tokens(src, regex_for_int, "int")
-
-        # Токенизация условных конструкций
-        if_else_tokens = CTokenizer.search_tokens(src, r'((if|else\s*if)\s*\([^{};]*\)\s*[{|\w])|else', "if")
-        src = CTokenizer.replace_tokens_in_src(src, if_else_tokens)
-        tokens += if_else_tokens
 
         # Токенизация управляющих конструкций
         tokens += CTokenizer.search_tokens(src, r'\bcontinue\s*;|\bbreak\s*;|\bgoto\s+\w+;', "control")
