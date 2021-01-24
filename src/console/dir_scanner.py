@@ -16,7 +16,7 @@ class DirScanner:
                     if entry.is_file() and entry.path.split('.')[-1].lower() == self.__file_extension:
                         try:
                             with open(entry.path, 'r', encoding="utf-8") as src_file:
-                                files.append(SrcFile(entry.name, src_file.read()))
+                                files.append(SrcFile(entry.name, entry.path, src_file.read()))
                         except UnicodeDecodeError as e:
                             print("Файл " + entry.path + " не удалось прочитать - не в кодировке utf-8")
         except FileNotFoundError as e:
