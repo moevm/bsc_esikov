@@ -238,6 +238,8 @@ class CTokenizer(Tokenizer):
                 src = src[:token.end - 2] + "{" + src[token.end - 1:]
             else:
                 src = src[:token.end - 1] + "{" + src[token.end:]
+        for match in re.finditer(r'(\bcase|\bdefault)[^:]*:', src, flags=re.ASCII):
+            src = src[:match.start()] + CTokenizer.NOT_TOKEN * (match.end() - match.start()) + src[match.end():]
         tokens += case_tokens
 
         # Токенизация условных конструкций
