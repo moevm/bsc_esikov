@@ -357,12 +357,12 @@ class CTokenizer(Tokenizer):
                 i += 1
                 if i < len(tokens) and tokens[i].symbol != "{":
                     count_brace += 1
-                    tokens = tokens[:i] + [Token("{", tokens[i - 1].start + 0.5, tokens[i - 1].start + 0.5)] + tokens[i:]
+                    tokens = tokens[:i] + [Token("{", tokens[i - 1].start + 1, tokens[i - 1].end)] + tokens[i:]
                     i += 1
                     continue
             if count_brace != 0:
                 while count_brace != 0:
                     i += 1
-                    tokens = tokens[:i] + [Token("}", tokens[i - 1].end + 0.5, tokens[i - 1].end + 0.5)] + tokens[i:]
+                    tokens = tokens[:i] + [Token("}", tokens[i - 1].end, tokens[i - 1].end)] + tokens[i:]
                     count_brace -= 1
             i += 1

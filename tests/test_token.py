@@ -12,13 +12,13 @@ class TestToken(unittest.TestCase):
         ]
         self.token_list_2 = [
             Token("I", 0, 1),
-            Token("{", 0.5, 0.5),
+            Token("{", 1, 1),
             Token("M", 3, 10),
-            Token("}", 10.5, 10.5),
+            Token("}", 10, 10),
             Token("I", 12, 15),
-            Token("{", 12.5, 12.5),
+            Token("{", 13, 15),
             Token("R", 17, 20),
-            Token("}", 20.5, 20.5)
+            Token("}", 20, 20)
         ]
         self.token_list_3 = [
             Token("S", 0, 1),
@@ -36,8 +36,8 @@ class TestToken(unittest.TestCase):
         self.assertEqual(Token.find_border_tokens_str_in_token_list(self.token_list_1, "IMIR"), (0, 20))
         self.assertEqual(Token.find_border_tokens_str_in_token_list(self.token_list_1, "MIR"), (3, 20))
         self.assertIsNone(Token.find_border_tokens_str_in_token_list(self.token_list_1, "S{M}"))
-        self.assertEqual(Token.find_border_tokens_str_in_token_list(self.token_list_2, "I{M}"), (0, 10.5))
-        self.assertEqual(Token.find_border_tokens_str_in_token_list(self.token_list_2, "M}I{R}"), (3, 20.5))
+        self.assertEqual(Token.find_border_tokens_str_in_token_list(self.token_list_2, "I{M}"), (0, 10))
+        self.assertEqual(Token.find_border_tokens_str_in_token_list(self.token_list_2, "M}I{R}"), (3, 20))
         self.assertEqual(Token.find_border_tokens_str_in_token_list(self.token_list_3, "SIM"), (0, 15))
         self.assertIsNone(Token.find_border_tokens_str_in_token_list(self.token_list_3, "SIMM"))
         self.assertIsNone(Token.find_border_tokens_str_in_token_list(self.token_list_3, "NSIMM"))

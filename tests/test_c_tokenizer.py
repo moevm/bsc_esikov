@@ -278,9 +278,9 @@ class TestCTokenizer(unittest.TestCase):
         ]
         true_result = [
             Token("I", 0, 1),
-            Token("{", 0.5, 0.5),
+            Token("{", 1, 1),
             Token("M", 3, 10),
-            Token("}", 10.5, 10.5)
+            Token("}", 10, 10)
         ]
         current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
         self.assert_tokens_list(current_result, true_result)
@@ -291,9 +291,9 @@ class TestCTokenizer(unittest.TestCase):
         ]
         true_result = [
             Token("S", 0, 1),
-            Token("{", 0.5, 0.5),
+            Token("{", 1, 1),
             Token("M", 3, 10),
-            Token("}", 10.5, 10.5)
+            Token("}", 10, 10)
         ]
         current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
         self.assert_tokens_list(current_result, true_result)
@@ -301,15 +301,16 @@ class TestCTokenizer(unittest.TestCase):
         tokens = [
             Token("S", 0, 1),
             Token("I", 3, 10),
-            Token("M", 12, 15)]
+            Token("M", 12, 15)
+        ]
         true_result = [
             Token("S", 0, 1),
-            Token("{", 0.5, 0.5),
+            Token("{", 1, 1),
             Token("I", 3, 10),
-            Token("{", 3.5, 3.5),
+            Token("{", 4, 10),
             Token("M", 12, 15),
-            Token("}", 15.5, 15.5),
-            Token("}", 16, 16)
+            Token("}", 15, 15),
+            Token("}", 15, 15)
         ]
         current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
         self.assert_tokens_list(current_result, true_result)
@@ -322,22 +323,22 @@ class TestCTokenizer(unittest.TestCase):
         ]
         true_result = [
             Token("I", 0, 1),
-            Token("{", 0.5, 0.5),
+            Token("{", 1, 1),
             Token("M", 3, 10),
-            Token("}", 10.5, 10.5),
+            Token("}", 10, 10),
             Token("I", 12, 15),
-            Token("{", 12.5, 12.5),
+            Token("{", 13, 15),
             Token("R", 17, 20),
-            Token("}", 20.5, 20.5)
+            Token("}", 20, 20)
         ]
         current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
         self.assert_tokens_list(current_result, true_result)
 
         tokens = [
             Token("I", 0, 1),
-            Token("{", 0.5, 0.5),
+            Token("{", 2, 2),
             Token("M", 3, 10),
-            Token("}", 10.5, 10.5)
+            Token("}", 10, 10)
         ]
         current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
         self.assert_tokens_list(current_result, tokens)
