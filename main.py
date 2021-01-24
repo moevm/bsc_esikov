@@ -1,3 +1,4 @@
+import sys
 from src import argv_parser
 from src.tokenizers.c_tokenizer import CTokenizer
 from src.console.dir_scanner import DirScanner
@@ -17,6 +18,7 @@ if __name__ == "__main__":
         LIMIT = int(parameters.limit)
     except ValueError as e:
         print("Введённое предельное значение не является числом: " + parameters.limit)
+        sys.exit(-1)
     FILE_EXTENSION = "c"
 
     try:
@@ -24,10 +26,13 @@ if __name__ == "__main__":
             search_file = SrcFile(SEARCH_FILE_PATH, SEARCH_FILE_PATH, srcFile.read())
     except FileNotFoundError as e:
         print("Введённый файл не найден: " + SEARCH_FILE_PATH)
+        sys.exit(-1)
     except UnicodeDecodeError as e:
         print("Файл " + SEARCH_FILE_PATH + " не удалось прочитать - не в кодировке utf-8")
+        sys.exit(-1)
     except OSError as e:
         print("Введённый параметр не является файлом: " + SEARCH_FILE_PATH)
+        sys.exit(-1)
 
     tokenizer = CTokenizer()
     scanner = DirScanner(FILE_EXTENSION)

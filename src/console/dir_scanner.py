@@ -1,4 +1,5 @@
 import os
+import sys
 from src.src_file import SrcFile
 
 
@@ -21,6 +22,8 @@ class DirScanner:
                             print("Файл " + entry.path + " не удалось прочитать - не в кодировке utf-8")
         except FileNotFoundError as e:
             print("Введённая директория не найдена: " + path)
+            sys.exit(-1)
         except OSError as e:
             print("Синтаксическая ошибка в пути до директории: " + path)
+            sys.exit(-1)
         return files
