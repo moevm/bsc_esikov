@@ -61,7 +61,10 @@ if __name__ == "__main__":
         similarity_tokens_sequence = greedy_algo.search(tokens_str)
         similarity.append(Similarity(search_file, file, similarity_tokens_sequence))
 
-    print("Полученный результат:")
+    if len(similarity) > 0:
+        print("Полученный результат:")
+    else:
+        print("В директории не было обнаружено файлов с процентом совпадения > " + str(LIMIT))
     for sim in similarity:
         check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
         print("$" * 30)
