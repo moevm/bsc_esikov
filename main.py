@@ -65,16 +65,18 @@ if __name__ == "__main__":
         print("Полученный результат:")
     else:
         print("В директории не было обнаружено файлов с процентом совпадения > " + str(LIMIT))
+
     for sim in similarity:
         check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
-        print("$" * 30)
+        print("*" * 60)
         print(sim.check_file_path + ":")
+        print("-" * 60)
         for src in check_file_similarity_src:
             print(src)
-            print("-" * 30)
-        print("\n")
+            print("-" * 60)
         print(sim.detected_file_path + "  --  " + str(round(sim.similarity_percentage)) + "% сходства:")
+        print("-" * 60)
         for src in detected_file_similarity_src:
             print(src)
-            print("-" * 30)
+            print("-" * 60)
         print("\n")
