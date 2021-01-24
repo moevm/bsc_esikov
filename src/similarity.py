@@ -18,3 +18,11 @@ class Similarity:
     def _get_str_src_from_token_str(self, src_file, sim_tokens_str):
         start, end = Token.find_border_tokens_str_in_token_list(src_file.tokens, sim_tokens_str)
         return src_file.src[start:end]
+
+    @property
+    def check_file_path(self):
+        return self.__check_file.path
+
+    @property
+    def detected_file_path(self):
+        return self.__detected_file.path
