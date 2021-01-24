@@ -72,8 +72,10 @@ class CTokenizer(Tokenizer):
         change_code = CTokenizer.replace_break_in_switch(change_code)
         # Удаление ключевого слова switch, чтобы оно не было токенизировано как определение функции
         change_code = re.sub(r'switch[^{]*{', "", change_code)
+        # Токенизация условных конструкций
+        change_code = re.sub(r'(((if|elseif)\([^)]*\))|else)', CTokenizer.border_token("if"), change_code)
         # Токенизация определения функции
-        change_code = re.sub(r'([a-zA-Z_][\w*]*)\(([\w$.*\[\]]*,*)*\){', CTokenizer.border_token("func") + "{", change_code)
+        change_code = re.sub(r'[\w*]+\([^{]*\){', CTokenizer.border_token("func") + "{", change_code)
         # Токенизация вызова функции
         change_code = re.sub(r'([a-zA-Z_]\w*)\([^;!><|&]*\);', CTokenizer.border_token("call") + ";", change_code)
         # Токенизация приведения типа
@@ -97,8 +99,6 @@ class CTokenizer(Tokenizer):
                              CTokenizer.border_token("int"), change_code)
         # Токенизация свитч
         change_code = re.sub(r'(case|default)[^:]*:{?', CTokenizer.border_token("if") + "{", change_code)
-        # Токенизация условных конструкций
-        change_code = re.sub(r'(((if|elseif)\([^)]*\))|else)', CTokenizer.border_token("if"), change_code)
         # Токенизация циклов
         change_code = re.sub(r'do', CTokenizer.border_token("cycle"), change_code)
         change_code = re.sub(r'while\([^;]*\);', "", change_code)
