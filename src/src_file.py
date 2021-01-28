@@ -40,3 +40,7 @@ class SrcFile:
     @similarity_percentage.setter
     def similarity_percentage(self, similarity_percentage):
         self.__similarity_percentage = similarity_percentage
+
+    @staticmethod
+    def is_file_have_this_extension(path, file_extension):
+        return path.split('.')[-1].lower() == file_extension
