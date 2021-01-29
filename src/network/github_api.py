@@ -18,21 +18,23 @@ class GithubAPI:
         headers = {
             'Authorization': 'token ' + self.__token
         }
-        return requests.get(address + api_url, headers=headers).json()
+        response = requests.get(address + api_url, headers=headers)
+        response.raise_for_status()
+        return response
 
     def get_name_default_branch(self, owner_login, repo_name):
         api_url = '/repos/{owner}/{repo}'.format(owner=owner_login, repo=repo_name)
-        response_json = self.__send_request(api_url)
+        response_json = self.__send_request(api_url).json()
         return response_json['default_branch']
 
     def get_sha_last_commit_in_default_branch(self, owner_login, repo_name, branch_name):
         api_url = '/repos/{owner}/{repo}/branches/{branch}'.format(owner=owner_login, repo=repo_name, branch=branch_name)
-        response_json = self.__send_request(api_url)
+        response_json = self.__send_request(api_url).json()
         return response_json['commit']['sha']
 
     def get_src_file_from_sha(self, owner_login, repo_name, sha, file_path):
         api_url = '/repos/{owner}/{repo}/git/blobs/{sha}'.format(owner=owner_login, repo=repo_name, sha=sha)
-        response_json = self.__send_request(api_url)
+        response_json = self.__send_request(api_url).json()
         if response_json['encoding'] == 'base64':
             file_bytes = base64.b64decode(response_json['content'])
             src = file_bytes.decode('utf-8')
@@ -43,7 +45,7 @@ class GithubAPI:
 
     def get_files_generator_from_sha_commit(self, owner_login, repo_name, sha, file_path='.'):
         api_url = '/repos/{owner}/{repo}/git/trees/{sha}'.format(owner=owner_login, repo=repo_name, sha=sha)
-        response_json = self.__send_request(api_url)
+        response_json = self.__send_request(api_url).json()
         tree = response_json['tree']
         for node in tree:
             current_path = file_path + "/" + node["path"]
@@ -59,6 +61,12 @@ class GithubAPI:
             sha_last_commit = self.get_sha_last_commit_in_default_branch(owner_login, repo_name, default_branch_name)
             files_generator = self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
         except ValueError as e:
+            print(str(e))
+            sys.exit(-1)
+        except requests.exceptions.ConnectionError as e:
+            print(str(e))
+            sys.exit(-1)
+        except requests.exceptions.HTTPError as e:
             print(str(e))
             sys.exit(-1)
         except KeyError as e:
