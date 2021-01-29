@@ -73,6 +73,8 @@ class GithubAPI:
             print(str(e))
             sys.exit(-1)
         except KeyError as e:
-            print("Github API rate limit exceeded. Try later")
+            # 5000 requests per hour
+            # api_url = 'rate_limit' - for check count available requests
+            print("Github API rate limit exceeded. Limit = 5000 requests per hour. Try later")
             sys.exit(-1)
         return files_generator
