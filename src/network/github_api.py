@@ -55,13 +55,12 @@ class GithubAPI:
     def get_files_generator_from_repo_url(self, repo_url):
         try:
             owner_login, repo_name = UrlParser.parse_github_repo(repo_url)
-        except ValueError as e:
-            print(str(e))
-            sys.exit(-1)
-        try:
             default_branch_name = self.get_name_default_branch(owner_login, repo_name)
             sha_last_commit = self.get_sha_last_commit_in_default_branch(owner_login, repo_name, default_branch_name)
             files_generator = self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
+        except ValueError as e:
+            print(str(e))
+            sys.exit(-1)
         except KeyError as e:
             print("Github API rate limit exceeded. Try later")
             sys.exit(-1)
