@@ -18,7 +18,7 @@ class GithubAPI:
         headers = {
             'Authorization': 'token ' + self.__token
         }
-        response = requests.get(address + api_url, headers=headers)
+        response = requests.get(address + api_url, headers=headers, timeout=7)
         response.raise_for_status()
         return response
 
@@ -62,6 +62,9 @@ class GithubAPI:
             files_generator = self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
         except ValueError as e:
             print(str(e))
+            sys.exit(-1)
+        except requests.exceptions.Timeout as e:
+            print(str(e).split("'")[-2])
             sys.exit(-1)
         except requests.exceptions.ConnectionError as e:
             print(str(e))
