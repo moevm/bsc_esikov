@@ -5,6 +5,7 @@ import tests.test_heskel as test_heskel
 import tests.test_greedy_string_tiling as test_greedy_string_tiling
 import tests.test_token as test_token
 import tests.test_similarity as test_similarity
+import tests.test_url_parser as test_url_parser
 
 
 if __name__ == '__main__':
@@ -16,6 +17,7 @@ if __name__ == '__main__':
         testLoad.loadTestsFromModule(test_greedy_string_tiling),
         testLoad.loadTestsFromModule(test_token),
         testLoad.loadTestsFromModule(test_similarity),
+        testLoad.loadTestsFromModule(test_url_parser),
     ]
     suites = unittest.TestSuite(suites_list)
     runner = unittest.TextTestRunner(verbosity=2)
