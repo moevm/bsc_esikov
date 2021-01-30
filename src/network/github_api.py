@@ -15,7 +15,10 @@ class GithubAPI:
         address = 'https://api.github.com'
         if api_url[0] != "/":
             address += "/"
-        headers.update({'Authorization': 'token ' + self.__token})
+        headers.update({
+            'Authorization': 'token ' + self.__token,
+            'accept': 'application/vnd.github.v3+json',
+        })
         response = requests.get(address + api_url, headers=headers, params=params, timeout=7)
         response.raise_for_status()
         return response
@@ -83,9 +86,6 @@ class GithubAPI:
         params = {
             'ref': branch_name
         }
-        headers = {
-            'accept': 'application/vnd.github.v3+json',
-        }
-        response_json = self.__send_get_request(api_url, headers=headers, params=params).json()
+        response_json = self.__send_get_request(api_url, params=params).json()
         file = self.get_src_file_from_sha(owner_login, repo_name, response_json['sha'], "./" + path)
         return file
