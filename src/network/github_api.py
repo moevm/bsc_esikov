@@ -76,3 +76,16 @@ class GithubAPI:
             print("Github API rate limit exceeded. Limit = 5000 requests per hour. Try later")
             sys.exit(-1)
         return files_generator
+
+    def get_file_from_url(self, file_url):
+        owner_login, repo_name, branch_name, path = UrlParser.parse_github_file_path(file_url)
+        api_url = '/repos/{owner}/{repo}/contents/{path}'.format(owner=owner_login, repo=repo_name, path=path)
+        params = {
+            'ref': branch_name
+        }
+        headers = {
+            'accept': 'application/vnd.github.v3+json',
+        }
+        response_json = self.__send_get_request(api_url, headers=headers, params=params).json()
+        file = self.get_src_file_from_sha(owner_login, repo_name, response_json['sha'], "./" + path)
+        return file
