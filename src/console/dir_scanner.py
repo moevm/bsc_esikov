@@ -25,3 +25,18 @@ class DirScanner:
         except OSError as e:
             print("Синтаксическая ошибка в пути до директории: " + path)
             sys.exit(-1)
+
+    @staticmethod
+    def read_file(path):
+        try:
+            with open(path, "r", encoding="utf-8") as src_file:
+                return SrcFile(path, path, src_file.read())
+        except FileNotFoundError as e:
+            print("Введённый файл не найден: " + path)
+            sys.exit(-1)
+        except UnicodeDecodeError as e:
+            print("Файл " + path + " не удалось прочитать - не в кодировке utf-8")
+            sys.exit(-1)
+        except OSError as e:
+            print("Введённый параметр не является файлом: " + path)
+            sys.exit(-1)
