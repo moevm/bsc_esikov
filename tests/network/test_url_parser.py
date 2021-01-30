@@ -41,6 +41,11 @@ class TestUrlParser(unittest.TestCase):
 
         self.assertRaises(ValueError, UrlParser.parse_github_file_path, 'https://www.google.com/')
 
+    def test_is_url(self):
+        self.assertTrue(UrlParser.is_url('https://github.com'))
+        self.assertTrue(UrlParser.is_url('https://github.com/'))
+        self.assertFalse(UrlParser.is_url('./dir/file.ext'))
+
 
 if __name__ == '__main__':
     unittest.main()

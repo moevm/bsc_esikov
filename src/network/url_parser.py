@@ -1,5 +1,12 @@
 class UrlParser:
     @staticmethod
+    def is_url(url):
+        if url[:8] == 'https://' or url[:7] == 'http://':
+            return True
+        else:
+            return False
+
+    @staticmethod
     def parse_github_repo(github_repo_url):
         return UrlParser.__github_parse(github_repo_url, UrlParser.__github_repo_return_func)
 
@@ -16,6 +23,7 @@ class UrlParser:
     @staticmethod
     def __github_file_path_return_func(substrings_url):
         file_path = ""
+        # [7] - begin file path in repo
         for i in range(7, len(substrings_url)):
             file_path += substrings_url[i] + "/"
         file_path = file_path[:-1]  # delete last "/"
