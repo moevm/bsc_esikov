@@ -5,6 +5,8 @@ class UrlParser:
 
     @staticmethod
     def __github_repo_return_func(substrings_url):
+        # [3] - owner repo
+        # [4] - repo name
         return substrings_url[3], substrings_url[4]
 
     @staticmethod
@@ -16,9 +18,13 @@ class UrlParser:
         file_path = ""
         for i in range(7, len(substrings_url)):
             file_path += substrings_url[i] + "/"
-        file_path = file_path[:-1]
+        file_path = file_path[:-1]  # delete last "/"
+        # [5] - object type: blob, tree...
         if substrings_url[5] != 'blob':
             raise ValueError('Переданный путь не является путём до файла в github репозитории')
+        # [3] - owner repo
+        # [4] - repo name
+        # [6] - branch name
         return substrings_url[3], substrings_url[4], substrings_url[6], file_path
 
     @staticmethod
