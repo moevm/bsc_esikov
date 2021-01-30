@@ -8,16 +8,15 @@ class DirScanner:
         self.__file_extension = file_extension
 
     def scan(self, path):
-        files = []
         try:
             with os.scandir(path) as it:
                 for entry in it:
                     if entry.is_dir() and entry.name[0] != ".":
-                        files += self.scan(os.path.join(path, entry.name))
+                        yield from self.scan(os.path.join(path, entry.name))
                     if entry.is_file() and SrcFile.is_file_have_this_extension(entry.path, self.__file_extension):
                         try:
                             with open(entry.path, 'r', encoding="utf-8") as src_file:
-                                files.append(SrcFile(entry.name, entry.path, src_file.read()))
+                                yield SrcFile(entry.name, entry.path, src_file.read())
                         except UnicodeDecodeError as e:
                             print("Файл " + entry.path + " не удалось прочитать - не в кодировке utf-8")
         except FileNotFoundError as e:
@@ -26,4 +25,3 @@ class DirScanner:
         except OSError as e:
             print("Синтаксическая ошибка в пути до директории: " + path)
             sys.exit(-1)
-        return files
