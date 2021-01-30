@@ -353,6 +353,29 @@ class TestCTokenizer(unittest.TestCase):
         current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
         self.assert_tokens_list(current_result, tokens)
 
+    def test_get_function_names(self):
+        self.assertListEqual(CTokenizer.get_function_names("int sum(int a, int b) {"), ["sum"])
+        self.assertListEqual(CTokenizer.get_function_names("void  _sum (){"), ["_sum"])
+        self.assertListEqual(CTokenizer.get_function_names(" int **  _sum (int a[]){"), ["_sum"])
+        src = "int (*select(void))(void){return 0;}"
+        self.assertListEqual(CTokenizer.get_function_names(src), ["select"])
+        self.assertListEqual(CTokenizer.get_function_names(src * 2), ["select"])
+        src = src + "int (*test(void))(void){return 0;}"
+        self.assertListEqual(sorted(CTokenizer.get_function_names(src)), ["select", "test"])
+        src = "int operation1(int (*op)(int, int), int a, int b){"
+        self.assertListEqual(CTokenizer.get_function_names(src), ["operation1"])
+        self.assertListEqual(CTokenizer.get_function_names("int sum(int n, ...){"), ["sum"])
+        src = "struct time addminutes(struct time t, int minutes){"
+        self.assertListEqual(CTokenizer.get_function_names(src), ["addminutes"])
+        src = "int sum(int a, int b) { return a + b; }"
+        self.assertListEqual(CTokenizer.get_function_names(src), ["sum"])
+        src = "int sum(int a, int b) { return a + b; } int mult(int a, int b) { return a * b; } "
+        self.assertListEqual(sorted(CTokenizer.get_function_names(src)), ["mult", "sum"])
+        self.assertListEqual(CTokenizer.get_function_names("while (x < 10) { x++; }"), [])
+        self.assertListEqual(CTokenizer.get_function_names("do { x++; }while (x < 10);"), [])
+        src = "for (i = 0; i < 10; i++) { func(i); }"
+        self.assertListEqual(CTokenizer.get_function_names(src), [])
+
 
 if __name__ == '__main__':
     unittest.main()

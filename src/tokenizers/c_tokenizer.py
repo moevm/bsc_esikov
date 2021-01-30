@@ -248,7 +248,7 @@ class CTokenizer(Tokenizer):
         tokens += if_else_tokens
 
         # Токенизация определения функции
-        function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)*|\s+)\w+\s*\([^{]*\)\s*{', "func")
+        function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)+|\s+)\w+\s*\([^{]*\)\s*{', "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
         tokens += function_tokens
 
@@ -368,3 +368,12 @@ class CTokenizer(Tokenizer):
                     tokens = tokens[:i] + [Token("}", tokens[i - 1].end, tokens[i - 1].end)] + tokens[i:]
                     count_brace -= 1
             i += 1
+
+    @staticmethod
+    def get_function_names(src):
+        functions = set()
+        for match in re.finditer(r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*(\w+)\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{', src, flags=re.ASCII):
+            functions |= {match[3]}
+        for match in re.finditer(r'\w+((\s*\*\s*)+|\s+)(\w+)\s*\([^{]*\)\s*{', src, flags=re.ASCII):
+            functions |= {match[3]}
+        return list(functions)
