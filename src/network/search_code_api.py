@@ -23,7 +23,7 @@ class SearchCodeAPI:
         return response
 
     @staticmethod
-    def get_d(list_func_names, file_extension, per_page=16):
+    def get_files_generator_from_list_func_names(list_func_names, file_extension, per_page=16):
         for func_name in list_func_names:
             p = 0
             try_next = True
@@ -46,5 +46,7 @@ class SearchCodeAPI:
                     file_response = SearchCodeAPI.__send_get_request('/result/' + str(result['id'])).json()
                     file_name = result['filename']
                     path = '.' + result['location'] + '/' + file_name
-                    yield SrcFile(file_name, path, file_response['code'])
+                    file = SrcFile(file_name, path, file_response['code'])
+                    file.source = result['repo']
+                    yield file
                 p += 1
