@@ -10,6 +10,7 @@ from src.similarity import Similarity
 from src.src_file import SrcFile
 from src.network.github_api import GithubAPI
 from src.network.url_parser import UrlParser
+from src.network.search_code_api import SearchCodeAPI
 
 
 def get_search_file():
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     if not SrcFile.is_file_have_this_extension(SEARCH_FILE_PATH, FILE_EXTENSION):
         print('Приложение поддерживает только файлы с расширением .c')
         sys.exit(-1)
-    SEARCH_DIR = parameters.dir
+    SEARCH_DIR = parameters.data
     try:
         LIMIT = int(parameters.limit)
     except ValueError as e:
@@ -62,21 +63,26 @@ if __name__ == "__main__":
     search_file.tokens = TOKENIZER.tokenize(search_file.src)
     GREEDY_ALGO = GreedyStringTiling(Token.get_tokens_str_from_token_list(search_file.tokens))
 
-    is_find_similarity = False
-    for sim in get_similarity(search_file):
-        check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
-        print("*" * 60)
-        print(sim.check_file_path + ":")
-        print("-" * 60)
-        for src in check_file_similarity_src:
-            print(src)
+    if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
+        func_names = CTokenizer.get_function_names(search_file.src)
+        for file in SearchCodeAPI.get_files_generator_from_list_func_names(func_names, FILE_EXTENSION):
+            print(file.source + " " + file.path)
+    else:
+        is_find_similarity = False
+        for sim in get_similarity(search_file):
+            check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
+            print("*" * 60)
+            print(sim.check_file_path + ":")
             print("-" * 60)
-        print(sim.detected_file_path + "  --  " + str(round(sim.similarity_percentage)) + "% сходства:")
-        print("-" * 60)
-        for src in detected_file_similarity_src:
-            print(src)
+            for src in check_file_similarity_src:
+                print(src)
+                print("-" * 60)
+            print(sim.detected_file_path + "  --  " + str(round(sim.similarity_percentage)) + "% сходства:")
             print("-" * 60)
-        print("\n")
-        is_find_similarity = True
-    if is_find_similarity is False:
-        print("В директории не было обнаружено файлов с процентом совпадения > " + str(LIMIT))
+            for src in detected_file_similarity_src:
+                print(src)
+                print("-" * 60)
+            print("\n")
+            is_find_similarity = True
+        if is_find_similarity is False:
+            print("В директории не было обнаружено файлов с процентом совпадения > " + str(LIMIT))
