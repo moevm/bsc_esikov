@@ -8,6 +8,7 @@ class SrcFile:
         self.__src = src
         self.__tokens = []
         self.__similarity_percentage = 0
+        self.__source = ''
 
     @property
     def name(self):
@@ -40,6 +41,14 @@ class SrcFile:
     @similarity_percentage.setter
     def similarity_percentage(self, similarity_percentage):
         self.__similarity_percentage = similarity_percentage
+
+    @property
+    def source(self):
+        return self.__source
+
+    @source.setter
+    def source(self, source):
+        self.__source = source
 
     @staticmethod
     def is_file_have_this_extension(path, file_extension):
