@@ -224,12 +224,18 @@ class CTokenizer(Tokenizer):
         src = CTokenizer.replace_tokens_in_src(src, cycle_tokens)
         tokens += cycle_tokens
 
+        # Удаление закрывающей } в switch
+        for match in re.finditer(r'\bswitch[^{]*{\s*((\bcase|\bdefault)[^:]*:.*(\bbreak;)?\s*}?\s*)+\s*}', src, flags=re.ASCII + re.DOTALL):
+            src = src[:match.end() - 1] + ';' + src[match.end():]
+
         # Удаление break из switch
-        src = CTokenizer.replace_break_in_switch(src)
+        for match in re.finditer(r'(\bcase|\bdefault)[^:]*:.*?(\bbreak\s*;\s*}?)', src, flags=re.ASCII + re.DOTALL):
+            src = src[:match.start(2)] + CTokenizer.NOT_TOKEN * (match.end(2) - match.start(2)) + src[match.end(2):]
+            src = src[:match.end(2) - 1] + '}' + src[match.end(2):]
 
         # Удаление ключевого слова switch, чтобы оно не было токенизировано как определение функции
-        for match in re.finditer(r'\bswitch[^{]*{?', src, flags=re.ASCII):
-            src = src[:match.start()] + CTokenizer.NOT_TOKEN * (match.end() - match.start()) + src[match.end():]
+        for match in re.finditer(r'\bswitch[^{]*{', src, flags=re.ASCII):
+            src = src[:match.start()] + ';' * (match.end() - match.start()) + src[match.end():]
 
         # Токенизация switch
         case_tokens = CTokenizer.search_tokens(src, r'(\bcase|\bdefault)[^:]*:\s*[{\w]', "if")
@@ -238,8 +244,6 @@ class CTokenizer(Tokenizer):
                 src = src[:token.end - 2] + "{" + src[token.end - 1:]
             else:
                 src = src[:token.end - 1] + "{" + src[token.end:]
-        for match in re.finditer(r'(\bcase|\bdefault)[^:]*:', src, flags=re.ASCII):
-            src = src[:match.start()] + CTokenizer.NOT_TOKEN * (match.end() - match.start()) + src[match.end():]
         tokens += case_tokens
 
         # Токенизация условных конструкций
