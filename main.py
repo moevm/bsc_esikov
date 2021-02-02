@@ -44,6 +44,11 @@ if __name__ == "__main__":
     parameters = argv_parser.parse()
 
     FILE_EXTENSION = "c"
+    if FILE_EXTENSION == "c":
+        TOKENIZER = CTokenizer()
+    else:
+        print("Не указан язык программирования")
+        sys.exit(-1)
     SEARCH_FILE_PATH = parameters.file
     if not SrcFile.is_file_have_this_extension(SEARCH_FILE_PATH, FILE_EXTENSION):
         print('Приложение поддерживает только файлы с расширением .c')
@@ -56,7 +61,6 @@ if __name__ == "__main__":
         sys.exit(-1)
     GITHUB_API = GithubAPI(settings['GITHUB_TOKEN'], FILE_EXTENSION)
     SCANNER = DirScanner(FILE_EXTENSION)
-    TOKENIZER = CTokenizer()
 
     search_file = get_search_file()
     HESKEL_ALGO = Heskel(TOKENIZER.fast_tokenize(search_file.src))
