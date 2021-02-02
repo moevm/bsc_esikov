@@ -10,7 +10,7 @@ from src.similarity import Similarity
 from src.src_file import SrcFile
 from src.network.github_api import GithubAPI
 from src.network.url_parser import UrlParser
-from src.network.search_code_api import SearchCodeAPI
+from src.network.code_searcher import CodeSearcher
 
 
 def get_search_file():
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
         func_names = CTokenizer.get_function_names(search_file.src)
-        for file in SearchCodeAPI.get_files_generator_from_list_func_names(func_names, FILE_EXTENSION):
+        for file in CodeSearcher.search_per_function_names(func_names, FILE_EXTENSION, settings['GITHUB_TOKEN']):
             print(file.source + " " + file.path)
     else:
         is_find_similarity = False
