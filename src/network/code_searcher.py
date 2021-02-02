@@ -1,5 +1,6 @@
 from src.network.github_search_api import GithubSearchAPI
 from src.network.search_code_api import SearchCodeAPI
+from src.network.stack_exchange_api import StackExchangeAPI
 
 
 class CodeSearcher:
@@ -8,6 +9,7 @@ class CodeSearcher:
         search_api = [
             SearchCodeAPI(file_extension),
             GithubSearchAPI(file_extension, github_token),
+            StackExchangeAPI(file_extension)
         ]
 
         for func_name in list_func_names:
