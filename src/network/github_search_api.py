@@ -17,18 +17,17 @@ class GithubSearchAPI(SearchAPI):
         }
 
     def _send_search_request(self, func_name, page, per_page=50):
-        url = 'https://api.github.com/search/code'
-        headers = {
-            'Authorization': 'token ' + self._token,
-            'accept': 'application/vnd.github.v3+json',
-        }
-        q = '?q={func_name}+in:file+language:{language}&page={page}&per_page={per_page}'.format(
+        url = 'https://api.github.com/search/code?q={func_name}+in:file+language:{language}&page={page}&per_page={per_page}'.format(
             func_name=func_name,
             language=self.languages[self._file_extension],
             page=page,
             per_page=per_page
         )
-        response = requests.get(url + q, headers=headers, timeout=7)
+        headers = {
+            'Authorization': 'token ' + self._token,
+            'accept': 'application/vnd.github.v3+json',
+        }
+        response = requests.get(url, headers=headers, timeout=7)
         response.raise_for_status()
         return response
 
