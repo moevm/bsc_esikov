@@ -269,6 +269,22 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x = func(x)) if(x % 2 == 0) y += x;")), "S{I{AM}}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x; else return 0;")), "S{I{AM}I{R}}")
 
+        switch_str = "int updateCriticalNumber(int value){switch (value){case 0:return value + 64;break;case -10:{" \
+                     "return 10;break;}case 10:{return func(value);break;}}} "
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: return value + 64; break; " \
+                     "case -10: { return 10; break; } case 10: { return func(value); break; }}} "
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; break;}" \
+                     "case -10:  return 10; break; default: { return func(value); break; }}} "
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; break;}" \
+                     "case -10:  return 10; break; default:  return func(value); break; }} "
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; }" \
+                     "case -10: if (x > 80) return 10; default:  return func(value);}} "
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{I{R}}I{RC}}")
+
     def tokenize_runner(self, src):
         tokens = self.tokenizer.tokenize(src)
         return Token.get_tokens_str_from_token_list(tokens)

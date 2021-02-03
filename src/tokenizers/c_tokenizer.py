@@ -229,26 +229,26 @@ class CTokenizer(Tokenizer):
         tokens += cycle_tokens
 
         # Удаление закрывающей } в switch
-        for match in re.finditer(r'\bswitch[^{]*{\s*((\bcase|\bdefault)[^:]*:.*(\bbreak;)?\s*}?\s*)+\s*}', src, flags=re.ASCII + re.DOTALL):
-            src = src[:match.end() - 1] + ';' + src[match.end():]
+        #   Специальный символ $ используется в дальнейшем при токенизации как окончание switch
+        src = CTokenizer.replace_close_brace_in_switch(src, "$")
 
         # Удаление break из switch
         for match in re.finditer(r'(\bcase|\bdefault)[^:]*:.*?(\bbreak\s*;\s*}?)', src, flags=re.ASCII + re.DOTALL):
-            src = src[:match.start(2)] + CTokenizer.NOT_TOKEN * (match.end(2) - match.start(2)) + src[match.end(2):]
-            src = src[:match.end(2) - 1] + '}' + src[match.end(2):]
+            src = src[:match.start(2)] + CTokenizer.NOT_TOKEN * (match.end(2) - match.start(2) - 1) + src[match.end(2) - 1:]
 
         # Удаление ключевого слова switch, чтобы оно не было токенизировано как определение функции
         for match in re.finditer(r'\bswitch[^{]*{', src, flags=re.ASCII):
             src = src[:match.start()] + ';' * (match.end() - match.start()) + src[match.end():]
 
         # Токенизация switch
-        case_tokens = CTokenizer.search_tokens(src, r'(\bcase|\bdefault)[^:]*:\s*[{\w]', "if")
-        for token in case_tokens:
+        for match in re.finditer(r'(\b((case|default)\b[^:]*?:)\s*[{\w])([^}$]*?(?=(}|\$|\bcase\b|\bdefault\b)))', src, flags=re.ASCII):  # $ используется
+            token = Token(CTokenizer.TOKENS["if"], match.start(1), match.end(1))
             if src[token.end - 1] != "{":
-                src = src[:token.end - 2] + "{" + src[token.end - 1:]
-            else:
-                src = src[:token.end - 1] + "{" + src[token.end:]
-        tokens += case_tokens
+                tokens.append(Token("{", token.end - 2, token.end - 2))
+            tokens.append(token)
+            src = src[:match.start(2)] + ';' * (match.end(2) - match.start(2)) + src[match.end(2):]
+            if src[match.start(5)] != "}":
+                tokens.append(Token("}", match.start(5) - 1, match.start(5) - 1))
 
         # Токенизация условных конструкций
         if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w])|\belse\b', "if")
@@ -394,3 +394,19 @@ class CTokenizer(Tokenizer):
                 tokens.append(Token("}", match.end(2) - 1, match.end(2) - 1))
 
         return tokens
+
+    @staticmethod
+    def replace_close_brace_in_switch(src, symbol):
+        for match in re.finditer(r'\bswitch\b[^{]+{', src, flags=re.ASCII):
+            i = match.end()
+            count_close_brace = 1
+            while i < len(src):
+                if src[i] == '{':
+                    count_close_brace += 1
+                if src[i] == '}':
+                    count_close_brace -= 1
+                    if count_close_brace == 0:
+                        src = src[:i] + symbol + src[i + 1:]
+                        break
+                i += 1
+        return src
