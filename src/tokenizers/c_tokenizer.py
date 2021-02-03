@@ -280,7 +280,7 @@ class CTokenizer(Tokenizer):
         tokens += CTokenizer.search_tokens(src, regex_for_struct_var, "struct")
 
         # Токенизация основных типов данных
-        regex_for_ptr = r'({int_types}|{char_types}|{float_types}|void)(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
+        regex_for_ptr = r'({int_types}|{char_types}|{float_types}|void)(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d:]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                         .format(
                             int_types=CTokenizer.INT_TYPES,
                             char_types=CTokenizer.CHAR_TYPES,
@@ -289,13 +289,13 @@ class CTokenizer(Tokenizer):
         pointers = CTokenizer.search_tokens(src, regex_for_ptr, "ptr")
         src = CTokenizer.replace_tokens_in_src(src, pointers)
         tokens += pointers
-        regex_for_char = r'({char_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
+        regex_for_char = r'({char_types})\s+\w+[\[\]\d:]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                          .format(char_types=CTokenizer.CHAR_TYPES)
         tokens += CTokenizer.search_tokens(src, regex_for_char, "char")
-        regex_for_float = r'({float_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
+        regex_for_float = r'({float_types})\s+\w+[\[\]\d:]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                           .format(float_types=CTokenizer.FLOAT_TYPES)
         tokens += CTokenizer.search_tokens(src, regex_for_float, "double")
-        regex_for_int = r'({int_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
+        regex_for_int = r'({int_types})\s+\w+[\[\]\d:]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                         .format(int_types=CTokenizer.INT_TYPES)
         tokens += CTokenizer.search_tokens(src, regex_for_int, "int")
 

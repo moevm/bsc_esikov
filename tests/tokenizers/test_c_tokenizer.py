@@ -230,7 +230,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('struct time result_time = addminutes(current_time, minutes);'), "VAC")
         self.assertEqual(tokenizer('union code id = {120};'), "VA")
         self.assertEqual(tokenizer('union code { int digit; char letter; };'), "V{NB}")
-        # self.assertEqual(tokenizer('struct point{ unsigned int x:5; unsigned int y:3;};'), "V{NN}")
+        self.assertEqual(tokenizer('struct point{ unsigned int x:5; unsigned int y:3;};'), "V{NN}")
         self.assertEqual(tokenizer("if (a > b) return a; else return b;"), "I{R}I{R}")
         # self.assertEqual(tokenizer("if ((a > b) && (c > b)) return a; else return b;"), "I{R}I{R}")
         #self.assertEqual(tokenizer("if(c > b) return c; else if(b < c) return b; else return 0;"), "I{R}I{R}I{R}")
