@@ -205,6 +205,10 @@ class CTokenizer(Tokenizer):
         # Токенизация возврата из функции
         tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
 
+        # Токенизация тернарного оператора
+        ternary_tokens, src = CTokenizer.get_tokens_ternary_operator(src)
+        tokens += ternary_tokens
+
         # Токенизация указателей на функцию
         regex_for_func_ptr = r'\w+(\s*\*\s*)*\s*\((\s*\*\s*)+[\w+\[\]]+\s*\)\s*\([^=;]*\)\s*(?=[;=])'
         function_pointer_tokens = CTokenizer.search_tokens(src, regex_for_func_ptr, "ptr")
@@ -265,7 +269,7 @@ class CTokenizer(Tokenizer):
         tokens += call_tokens
 
         # Токенизация приведения типа
-        type_cast_tokens = CTokenizer.search_tokens(src, r'\(\s*\w+(\s*\*?\s*)*\)', "cast")
+        type_cast_tokens = CTokenizer.search_tokens(src, r'\(\s*\w+(\s*\*?\s*)*\)\s*[\w(]', "cast")
         src = CTokenizer.replace_tokens_in_src(src, type_cast_tokens)
         tokens += type_cast_tokens
 
@@ -309,10 +313,10 @@ class CTokenizer(Tokenizer):
         # Токенизация математических выражений
         tokens += CTokenizer.search_tokens(src, r'\w+\+\+|\+\+\w+', "math")
         tokens += CTokenizer.search_tokens(src, r'\w+--|--\w+', "math")
-        tokens += CTokenizer.search_tokens(src, r'[^@={},(\s]\s*\*', "math")  # @ используется
+        tokens += CTokenizer.search_tokens(src, r'(?<![@={},(\s])\s*\*', "math")  # @ используется
         tokens += CTokenizer.search_tokens(src, r'(?<=@)\*', "math")  # @ используется
-        tokens += CTokenizer.search_tokens(src, r'[^@={}><|&\s+-]\s*[+\-/%]\s*[^>\s+-]', "math")  # @ используется
-        tokens += CTokenizer.search_tokens(src, r'(?<=@)[+\-/%]\s*[^>\s+-]', "math")  # @ используется
+        tokens += CTokenizer.search_tokens(src, r'(?<![@={}><|&\s+-])\s*[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
+        tokens += CTokenizer.search_tokens(src, r'(?<=@)[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
 
         # Токенизация логических операций
         tokens += CTokenizer.search_tokens(src, r'&&|\|\||!', "logic")
@@ -410,3 +414,21 @@ class CTokenizer(Tokenizer):
                         break
                 i += 1
         return src
+
+    @staticmethod
+    def get_tokens_ternary_operator(src, replace='.'):
+        tokens = []
+        for match in re.finditer(r'(?<=[={;])([^={;]+)(\?[^:;]+)(:[^;]+;)', src, flags=re.ASCII):
+            tokens.append(Token(CTokenizer.TOKENS["if"], match.start(2), match.start(2)))
+            tokens.append(Token("{", match.start(2), match.start(2) + 1))
+            tokens.append(Token("}", match.end(2) - 1, match.end(2) - 1))
+            tokens.append(Token(CTokenizer.TOKENS["if"], match.start(3), match.start(3)))
+            tokens.append(Token("{", match.start(3), match.start(3) + 1))
+            tokens.append(Token("}", match.end(3) - 1, match.end(3) - 1))
+            if src[match.start(0) - 1] == "=":
+                tokens.append(Token(CTokenizer.TOKENS["assign"], match.start(2), match.start(2) + 2))
+                tokens.append(Token(CTokenizer.TOKENS["assign"], match.start(3), match.start(3) + 2))
+                src = src[:match.start(0) - 1] + "." + src[match.start(0):]
+            src = src[:match.start(3)] + ";" + src[match.start(3) + 1:]
+            src = src[:match.start(1)] + replace * (match.end(1) - match.start(1)) + src[match.end(1):]
+        return tokens, src
