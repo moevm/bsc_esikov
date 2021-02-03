@@ -52,6 +52,6 @@ class StackExchangeAPI(SearchAPI):
                 for i in pre_code_tags:
                     code = i.find("code")
                     if code is not None:
-                        file = SrcFile('Answer #' + str(answer_id), 'Answer #' + str(answer_id), code)
+                        file = SrcFile('Answer #' + str(answer_id), 'Answer #' + str(answer_id), code.text)
                         file.source = url
                         yield file

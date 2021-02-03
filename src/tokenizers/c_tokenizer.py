@@ -364,10 +364,11 @@ class CTokenizer(Tokenizer):
     @staticmethod
     def get_function_names(src):
         functions = set()
-        for match in re.finditer(r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*(\w+)\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{', src, flags=re.ASCII):
+        for match in re.finditer(r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*(\w+)\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{', src):
             functions |= {match[3]}
-        for match in re.finditer(r'\w+((\s*\*\s*)+|\s+)(\w+)\s*\([^{]*\)\s*{', src, flags=re.ASCII):
+        for match in re.finditer(r'\w+((\s*\*\s*)+|\s+)(\w+)\s*\([^{]*\)\s*{', src):
             functions |= {match[3]}
+        functions -= {"main"}
         return list(functions)
 
     @staticmethod
