@@ -188,16 +188,16 @@ class CTokenizer(Tokenizer):
 
     @staticmethod
     def replace_comments(src):
-        comment_tokens = CTokenizer.search_tokens(src, r'//[^\n]*(\n|$)', "control", re.ASCII + re.MULTILINE)
-        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, " ", True)
-        comment_tokens = CTokenizer.search_tokens(src, r'/\*.*?\*/', "control", re.ASCII + re.DOTALL)
-        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, " ", True)
+        comment_tokens = CTokenizer.search_tokens(src, r'//[^\n]*(\n|$)', "control", re.MULTILINE)
+        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, " ")
+        comment_tokens = CTokenizer.search_tokens(src, r'/\*.*?\*/', "control", re.DOTALL)
+        src = CTokenizer.replace_tokens_in_src(src, comment_tokens, " ")
         return src
 
     @staticmethod
     def replace_import(src):
-        import_tokens = CTokenizer.search_tokens(src, r'#include\s*[<"][^<>"]+[>"]', "control", re.ASCII)
-        src = CTokenizer.replace_tokens_in_src(src, import_tokens, " ", True)
+        import_tokens = CTokenizer.search_tokens(src, r'#include\s*[<"][^<>"]+[>"]', "control", re.DOTALL)
+        src = CTokenizer.replace_tokens_in_src(src, import_tokens, " ")
         return src
 
     def _process(self, src):
