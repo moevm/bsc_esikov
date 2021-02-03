@@ -265,7 +265,7 @@ class CTokenizer(Tokenizer):
 
         # Токенизация вызова функции
         call_tokens = []
-        for match in re.finditer(r'[^-+*/%\s]\s*\b(\w+\s*\([^;{]*?\)\s*)(?=;)', src, flags=re.ASCII):
+        for match in re.finditer(r'[^-+*/%|$<>^\s]\s*\b(\w+\s*\([^;{]*?\)\s*)(?=;)', src, flags=re.ASCII):
             call_tokens.append(Token(CTokenizer.TOKENS["call"], match.start(1), match.end(1) + 1))
         src = CTokenizer.replace_tokens_in_src(src, call_tokens, is_full_replace=False)
         tokens += call_tokens
