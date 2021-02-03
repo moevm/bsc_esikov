@@ -1,4 +1,5 @@
 import unittest
+from operator import attrgetter
 from src.tokenizers.c_tokenizer import CTokenizer
 from src.token import Token
 
@@ -161,8 +162,8 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('tom.age = alex.age;'), "A")
         self.assertEqual(tokenizer('phone.manufacturer.name = "Alex";'), "A")
         self.assertEqual(tokenizer('p_kate->name = "Tom";'), "A")
-        self.assertEqual(tokenizer('age = people[i].name'), "A")
-        self.assertEqual(tokenizer('age = *(people[i]->name)'), "A")
+        self.assertEqual(tokenizer('age = people[i].name;'), "A")
+        self.assertEqual(tokenizer('age = *(people[i]->name);'), "A")
         self.assertEqual(tokenizer("static int i = 0;"), "NA")
         self.assertEqual(tokenizer("const float PI = 3.14;"), "DA")
         self.assertEqual(tokenizer("float *const ptr=&i;"), "PA")
@@ -232,7 +233,7 @@ class TestCTokenizer(unittest.TestCase):
         # self.assertEqual(tokenizer('struct point{ unsigned int x:5; unsigned int y:3;};'), "V{NN}")
         self.assertEqual(tokenizer("if (a > b) return a; else return b;"), "I{R}I{R}")
         # self.assertEqual(tokenizer("if ((a > b) && (c > b)) return a; else return b;"), "I{R}I{R}")
-        self.assertEqual(tokenizer("if(c > b) return c; else if(b < c) return b; else return 0;"), "I{R}I{R}I{R}")
+        #self.assertEqual(tokenizer("if(c > b) return c; else if(b < c) return b; else return 0;"), "I{R}I{R}I{R}")
         self.assertEqual(tokenizer("if(func(a, b)) return a;"), "I{R}")
         self.assertEqual(tokenizer("if(func(a, b)){ a += b; return a;}"), "I{AMR}")
         self.assertEqual(tokenizer("if (a > b) { a++; return a;} else { b++; return b; }"), "I{MR}I{MR}")
@@ -249,6 +250,7 @@ class TestCTokenizer(unittest.TestCase):
         # self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x;"), "S{I{AM}}")
         # self.assertEqual(tokenizer("while(x = func(x)) if(x % 2 == 0) y += x;"), "S{I{AM}}")
         # self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x; else return 0;"), "SIAMIR")
+
         # self.assertEqual(self.tokenizer.tokenize("z = (x > y) ? x: y;"), "IAIA")
         # self.assertEqual(self.tokenizer.tokenize("z = (x > y) ? func1(): func2();"), "IACIAC")
         # self.assertEqual(self.tokenizer.tokenize("(x > y) ? func1(): func2();"), "ICIC")
@@ -260,6 +262,13 @@ class TestCTokenizer(unittest.TestCase):
     def test_tokenize(self):
         self.tokenize_basic_test_case(self.tokenize_runner)
 
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("if ((a > b) && (c > b)) return a; else return b;")), "I{R}I{R}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("if(x < 10) int a = 10;")), "I{NA}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("if(x < 10) if(x % 2 == 0) y += x;")), "I{I{AM}}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x;")), "S{I{AM}}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x = func(x)) if(x % 2 == 0) y += x;")), "S{I{AM}}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x; else return 0;")), "S{I{AM}I{R}}")
+
     def tokenize_runner(self, src):
         tokens = self.tokenizer.tokenize(src)
         return Token.get_tokens_str_from_token_list(tokens)
@@ -270,88 +279,6 @@ class TestCTokenizer(unittest.TestCase):
             self.assertEqual(current[i].symbol, true[i].symbol)
             self.assertEqual(current[i].start, true[i].start)
             self.assertEqual(current[i].end, true[i].end)
-
-    def test_place_curly_braces_in_tokens_list(self):
-        tokens = [
-            Token("I", 0, 1),
-            Token("M", 3, 10)
-        ]
-        true_result = [
-            Token("I", 0, 1),
-            Token("{", 1, 1),
-            Token("M", 3, 10),
-            Token("}", 10, 10)
-        ]
-        current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
-        self.assert_tokens_list(current_result, true_result)
-
-        tokens = [
-            Token("S", 0, 1),
-            Token("M", 3, 10)
-        ]
-        true_result = [
-            Token("S", 0, 1),
-            Token("{", 1, 1),
-            Token("M", 3, 10),
-            Token("}", 10, 10)
-        ]
-        current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
-        self.assert_tokens_list(current_result, true_result)
-
-        tokens = [
-            Token("S", 0, 1),
-            Token("I", 3, 10),
-            Token("M", 12, 15)
-        ]
-        true_result = [
-            Token("S", 0, 1),
-            Token("{", 1, 1),
-            Token("I", 3, 10),
-            Token("{", 4, 10),
-            Token("M", 12, 15),
-            Token("}", 15, 15),
-            Token("}", 15, 15)
-        ]
-        current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
-        self.assert_tokens_list(current_result, true_result)
-
-        tokens = [
-            Token("I", 0, 1),
-            Token("M", 3, 10),
-            Token("I", 12, 15),
-            Token("R", 17, 20)
-        ]
-        true_result = [
-            Token("I", 0, 1),
-            Token("{", 1, 1),
-            Token("M", 3, 10),
-            Token("}", 10, 10),
-            Token("I", 12, 15),
-            Token("{", 13, 15),
-            Token("R", 17, 20),
-            Token("}", 20, 20)
-        ]
-        current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
-        self.assert_tokens_list(current_result, true_result)
-
-        tokens = [
-            Token("I", 0, 1),
-            Token("{", 2, 2),
-            Token("M", 3, 10),
-            Token("}", 10, 10)
-        ]
-        current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
-        self.assert_tokens_list(current_result, tokens)
-
-        tokens = [
-            Token("I", 0, 1),
-            Token("{", 2, 2),
-            Token("M", 3, 10),
-            Token("R", 14, 20),
-            Token("}", 21, 21)
-        ]
-        current_result = CTokenizer.place_curly_braces_in_tokens_list(tokens)
-        self.assert_tokens_list(current_result, tokens)
 
     def test_get_function_names(self):
         self.assertListEqual(CTokenizer.get_function_names("int sum(int a, int b) {"), ["sum"])
@@ -375,6 +302,117 @@ class TestCTokenizer(unittest.TestCase):
         self.assertListEqual(CTokenizer.get_function_names("do { x++; }while (x < 10);"), [])
         src = "for (i = 0; i < 10; i++) { func(i); }"
         self.assertListEqual(CTokenizer.get_function_names(src), [])
+
+    def test_replace_tokens_in_src(self):
+        tokens = [
+            Token("T", 1, 20),
+        ]
+        self.assertEqual(CTokenizer.replace_tokens_in_src("if(x < 10) int a = 10", tokens), "i" + "." * 19 + "0")
+        tokens = [
+            Token("T", 1, 20),
+        ]
+        self.assertEqual(CTokenizer.replace_tokens_in_src("if(x < 10) int a = 10", tokens, is_full_replace=False), "i" + "." * 18 + "10")
+        tokens = [
+            Token("T", 1, 10),
+            Token("T", 18, 20),
+        ]
+        self.assertEqual(CTokenizer.replace_tokens_in_src("if(x < 10) int a = 10", tokens), "i" + "." * 9 + " int a =" + ".." + "0")
+        tokens = [
+            Token("T", 0, 12),
+            Token("T", 10, 21),
+        ]
+        self.assertEqual(CTokenizer.replace_tokens_in_src("if(x < 10) int a = 10", tokens), "." * 21)
+
+    def test_get_tokens_missing_curly_braces(self):
+        src = "if(x < 10) int a = 10;"
+        tokens = [
+            Token("{", 10, 10),
+            Token("}", 21, 21),
+        ]
+        self.assert_tokens_list(CTokenizer.get_tokens_missing_curly_braces(src), tokens)
+
+        src = " while(x < 10) int a = 10; "
+        tokens = [
+            Token("{", 14, 14),
+            Token("}", 25, 25),
+        ]
+        self.assert_tokens_list(CTokenizer.get_tokens_missing_curly_braces(src), tokens)
+
+        src = " while(6 < func(x)) int a = 10; "
+        tokens = [
+            Token("{", 17, 17),
+            Token("}", 30, 30),
+        ]
+        self.assert_tokens_list(CTokenizer.get_tokens_missing_curly_braces(src), tokens)
+
+        src = " while(x < 10) if(x % 2 == 0) a++;"
+        tokens = [
+            Token("{", 14, 14),
+            Token("{", 29, 29),
+            Token("}", 33, 33),
+            Token("}", 33, 33),
+        ]
+        self.assert_tokens_list(sorted(CTokenizer.get_tokens_missing_curly_braces(src), key=attrgetter('start', 'end')), tokens)
+
+        src = "while(x < 10) do a++; while(x % 2 == 0);"
+        tokens = [
+            Token("{", 13, 13),
+            Token("{", 16, 16),
+            Token("}", 20, 20),
+            Token("}", 20, 20),
+        ]
+        self.assert_tokens_list(sorted(CTokenizer.get_tokens_missing_curly_braces(src), key=attrgetter('start', 'end')), tokens)
+
+        src = "if (i > 0) for(;;;) i++;"
+        tokens = [
+            Token("{", 10, 10),
+            Token("{", 19, 19),
+            Token("}", 23, 23),
+            Token("}", 23, 23),
+        ]
+        self.assert_tokens_list(sorted(CTokenizer.get_tokens_missing_curly_braces(src), key=attrgetter('start', 'end')), tokens)
+
+        src = "if (i > 0) i++; else i--;"
+        tokens = [
+            Token("{", 10, 10),
+            Token("}", 14, 14),
+            Token("{", 20, 20),
+            Token("}", 24, 24),
+        ]
+        self.assert_tokens_list(sorted(CTokenizer.get_tokens_missing_curly_braces(src), key=attrgetter('start', 'end')), tokens)
+
+        src = "do if (i > 0) return func(); while(i > 10);"
+        tokens = [
+            Token("{", 2, 2),
+            Token("{", 13, 13),
+            Token("}", 27, 27),
+            Token("}", 27, 27),
+        ]
+        self.assert_tokens_list(sorted(CTokenizer.get_tokens_missing_curly_braces(src), key=attrgetter('start', 'end')), tokens)
+
+        src = " while((x > 8) && x < 19) if(y > 0) y--;else return y;"
+        tokens = [
+            Token("{", 14, 14),
+            Token("{", 35, 35),
+            Token("}", 39, 39),
+            Token("{", 44, 44),
+            Token("}", 53, 53),
+            Token("}", 53, 53),
+        ]
+        self.assert_tokens_list(sorted(CTokenizer.get_tokens_missing_curly_braces(src), key=attrgetter('start', 'end')), tokens)
+
+        src = " while((x > 8) && x < 19) if(y > 0) y--;else if (func()) return y;"
+        tokens = [
+            Token("{", 14, 14),
+            Token("{", 35, 35),
+            Token("}", 39, 39),
+            Token("{", 44, 44),
+            Token("{", 54, 54),
+            Token("}", 65, 65),
+            Token("}", 65, 65),
+            Token("}", 65, 65),
+        ]
+        self.assert_tokens_list(sorted(CTokenizer.get_tokens_missing_curly_braces(src), key=attrgetter('start', 'end')), tokens)
 
 
 if __name__ == '__main__':

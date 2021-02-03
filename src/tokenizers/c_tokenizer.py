@@ -1,4 +1,5 @@
 import re
+from operator import attrgetter
 from src.tokenizers.tokenizer import Tokenizer
 from src.token import Token
 
@@ -202,25 +203,28 @@ class CTokenizer(Tokenizer):
     def _process(self, src):
         tokens = []
         # Токенизация возврата из функции
-        tokens += CTokenizer.search_tokens(src, r'\breturn\s*;?', "return")
+        tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
 
         # Токенизация указателей на функцию
-        regex_for_func_ptr = r'\w+(\s*\*\s*)*\s*\((\s*\*\s*)+[\w+\[\]]+\s*\)\s*\([^=;]*\)\s*[;=]'
+        regex_for_func_ptr = r'\w+(\s*\*\s*)*\s*\((\s*\*\s*)+[\w+\[\]]+\s*\)\s*\([^=;]*\)\s*(?=[;=])'
         function_pointer_tokens = CTokenizer.search_tokens(src, regex_for_func_ptr, "ptr")
         src = CTokenizer.replace_tokens_in_src(src, function_pointer_tokens)
         tokens += function_pointer_tokens
 
         # Токенизация определения функции, возвращающей указатель на функцию
-        regex_for_func_def = r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*\w+\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{'
+        regex_for_func_def = r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*\w+\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*(?={)'
         function_tokens = CTokenizer.search_tokens(src, regex_for_func_def, "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
         tokens += function_tokens
+
+        # Получение токенов не расставленных фигурных скобок после for, while, do, if, else
+        tokens += CTokenizer.get_tokens_missing_curly_braces(src)
 
         # Токенизация циклов
         tokens += CTokenizer.search_tokens(src, r'\bdo\b', "cycle")
         while_from_do_tokens = CTokenizer.search_tokens(src, r'while\s*\([^;]*\)\s*;', "cycle")
         src = CTokenizer.replace_tokens_in_src(src, while_from_do_tokens)
-        cycle_tokens = CTokenizer.search_tokens(src, r'(\bfor|\bwhile)\s*\([^{}]*\)\s*(?=[{\w])', "cycle")
+        cycle_tokens = CTokenizer.search_tokens(src, r'\b(for|while)\b\s*\([^{]+?\)\s*(?=[{\w])', "cycle")
         src = CTokenizer.replace_tokens_in_src(src, cycle_tokens)
         tokens += cycle_tokens
 
@@ -247,18 +251,17 @@ class CTokenizer(Tokenizer):
         tokens += case_tokens
 
         # Токенизация условных конструкций
-        if_else_tokens = CTokenizer.search_tokens(src, r'((if|else\s*if)\s*\([^{};]*\)\s*[{|\w])|else', "if")
+        if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w])|\belse\b', "if")
         src = CTokenizer.replace_tokens_in_src(src, if_else_tokens)
         tokens += if_else_tokens
-
         # Токенизация определения функции
-        function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)+|\s+)\w+\s*\([^{]*\)\s*{', "func")
+        function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)+|\s+)\w+\s*\([^{]*\)\s*(?={)', "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
         tokens += function_tokens
 
         # Токенизация вызова функции
-        call_tokens = CTokenizer.search_tokens(src, r'\w+\s*\([^;{]*\)\s*;', "call")
-        src = CTokenizer.replace_tokens_in_src(src, call_tokens)
+        call_tokens = CTokenizer.search_tokens(src, r'\w+\s*\([^;{]*?\)\s*;', "call")
+        src = CTokenizer.replace_tokens_in_src(src, call_tokens, is_full_replace=False)
         tokens += call_tokens
 
         # Токенизация приведения типа
@@ -272,12 +275,12 @@ class CTokenizer(Tokenizer):
         tokens += struct_pointers_tokens
 
         # Токенизация структур
-        tokens += CTokenizer.search_tokens(src, r'(struct|union)(\s+\w+)?\s*{', "struct")
-        regex_for_struct_var = r'(struct|union)\s+\w+\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*[;=]'
+        tokens += CTokenizer.search_tokens(src, r'(struct|union)(\s+\w+)?\s*(?={)', "struct")
+        regex_for_struct_var = r'(struct|union)\s+\w+\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'
         tokens += CTokenizer.search_tokens(src, regex_for_struct_var, "struct")
 
         # Токенизация основных типов данных
-        regex_for_ptr = r'({int_types}|{char_types}|{float_types}|void)(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*[=;]'\
+        regex_for_ptr = r'({int_types}|{char_types}|{float_types}|void)(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                         .format(
                             int_types=CTokenizer.INT_TYPES,
                             char_types=CTokenizer.CHAR_TYPES,
@@ -286,13 +289,13 @@ class CTokenizer(Tokenizer):
         pointers = CTokenizer.search_tokens(src, regex_for_ptr, "ptr")
         src = CTokenizer.replace_tokens_in_src(src, pointers)
         tokens += pointers
-        regex_for_char = r'({char_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*[;=]'\
+        regex_for_char = r'({char_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                          .format(char_types=CTokenizer.CHAR_TYPES)
         tokens += CTokenizer.search_tokens(src, regex_for_char, "char")
-        regex_for_float = r'({float_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*[;=]'\
+        regex_for_float = r'({float_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                           .format(float_types=CTokenizer.FLOAT_TYPES)
         tokens += CTokenizer.search_tokens(src, regex_for_float, "double")
-        regex_for_int = r'({int_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*[;=]'\
+        regex_for_int = r'({int_types})\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
                         .format(int_types=CTokenizer.INT_TYPES)
         tokens += CTokenizer.search_tokens(src, regex_for_int, "int")
 
@@ -323,10 +326,10 @@ class CTokenizer(Tokenizer):
         tokens += CTokenizer.search_tokens(src, r'==|((?<!-)>)|(?<!<)<[^<]|<=|>=|!=', "compare")
 
         # Токенизация присваивания
-        assign_tokens = CTokenizer.search_tokens(src, r'[=@]\s*{[^;]*}\s*;', "assign")
+        assign_tokens = CTokenizer.search_tokens(src, r'[=@]\s*{[^;]*}\s*;', "assign")  # @ используется
         src = CTokenizer.replace_tokens_in_src(src, assign_tokens)
         tokens += assign_tokens
-        tokens += CTokenizer.search_tokens(src, r'(?<!=)[=@][^=;]+;?', "assign")
+        tokens += CTokenizer.search_tokens(src, r'(?<!=)[=@][^=;]+;?', "assign")  # @ используется
 
         # Токенизация фигурных скобок
         for match in re.finditer(r'{', src, flags=re.ASCII):
@@ -334,7 +337,7 @@ class CTokenizer(Tokenizer):
         for match in re.finditer(r'}', src, flags=re.ASCII):
             tokens.append(Token("}", match.start(), match.end()))
 
-        return CTokenizer.place_curly_braces_in_tokens_list(tokens)
+        return sorted(tokens, key=attrgetter('start', 'end'))
 
     @staticmethod
     def search_tokens(src, pattern, token_key, flags=re.ASCII):
@@ -344,34 +347,13 @@ class CTokenizer(Tokenizer):
         return tokens
 
     @staticmethod
-    def replace_tokens_in_src(src, tokens, replace=".", is_full_replace=False):
+    def replace_tokens_in_src(src, tokens, replace=".", is_full_replace=True):
         for token in tokens:
             if is_full_replace is True:
                 src = src[:token.start] + replace * (token.end - token.start) + src[token.end:]
             else:
                 src = src[:token.start] + replace * (token.end - token.start - 1) + src[token.end - 1:]
         return src
-
-    @staticmethod
-    def place_curly_braces_in_tokens_list(tokens):
-        i = count_brace = 0
-        tokens = sorted(tokens, key=lambda token: token.start)
-        while True:
-            if i >= len(tokens):
-                return tokens
-            if tokens[i].symbol == CTokenizer.TOKENS["if"] or tokens[i].symbol == CTokenizer.TOKENS["cycle"]:
-                i += 1
-                if i < len(tokens) and tokens[i].symbol != "{":
-                    count_brace += 1
-                    tokens = tokens[:i] + [Token("{", tokens[i - 1].start + 1, tokens[i - 1].end)] + tokens[i:]
-                    i += 1
-                    continue
-            if count_brace != 0:
-                while count_brace != 0:
-                    i += 1
-                    tokens = tokens[:i] + [Token("}", tokens[i - 1].end, tokens[i - 1].end)] + tokens[i:]
-                    count_brace -= 1
-            i += 1
 
     @staticmethod
     def get_function_names(src):
@@ -381,3 +363,34 @@ class CTokenizer(Tokenizer):
         for match in re.finditer(r'\w+((\s*\*\s*)+|\s+)(\w+)\s*\([^{]*\)\s*{', src, flags=re.ASCII):
             functions |= {match[3]}
         return list(functions)
+
+    @staticmethod
+    def get_tokens_missing_curly_braces(src):
+        tokens = []
+
+        for match in re.finditer(r'\belse\s*([^;{]+;)\s*', src, flags=re.ASCII):
+            tokens.append(Token("{", match.start(1) - 1, match.start(1) - 1))
+            tokens.append(Token("}", match.end(1) - 1, match.end(1) - 1))
+
+        for match in re.finditer(r'\bdo[^\w]([^;]+;)', src, flags=re.ASCII):
+            tokens.append(Token("{", match.start(1) - 1, match.start(1) - 1))
+            tokens.append(Token("}", match.end(1) - 1, match.end(1) - 1))
+
+        for match in re.finditer(r'\bfor\s*\((([^;]*;\s*){2}[^)]*)\)', src, flags=re.ASCII):
+            src = src[:match.start(1)] + "." * (match.end(1) - match.start(1)) + src[match.end(1):]
+
+        keywords = ["while", "if", "for"]
+        for word in keywords:
+            for match in re.finditer(r'(?=(\b' + word + r'\s*\([^;{]+?\)\s*([^;{]+;)\s*))', src, flags=re.ASCII):
+                tokens.append(Token("{", match.start(2) - 1, match.start(2) - 1))
+                i = match.end(1)
+                if i + 4 < len(src) and word != "if":
+                    if src[i] == 'e' and src[i + 1] == 'l' and src[i + 2] == 's' and src[i + 3] == 'e' \
+                            and not str.isalpha(src[i + 4]):
+                        while i < len(src) and src[i] != ';':
+                            i += 1
+                        tokens.append(Token("}", i, i))
+                        continue
+                tokens.append(Token("}", match.end(2) - 1, match.end(2) - 1))
+
+        return tokens
