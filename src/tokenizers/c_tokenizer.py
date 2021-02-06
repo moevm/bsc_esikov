@@ -379,7 +379,7 @@ class CTokenizer(Tokenizer):
             tokens.append(Token("{", match.start(1) - 1, match.start(1) - 1))
             tokens.append(Token("}", match.end(1) - 1, match.end(1) - 1))
 
-        for match in re.finditer(r'\bdo[^\w]([^;]+;)', src, flags=re.ASCII):
+        for match in re.finditer(r'\bdo\b\s*([^{;]+;)', src, flags=re.ASCII):
             tokens.append(Token("{", match.start(1) - 1, match.start(1) - 1))
             tokens.append(Token("}", match.end(1) - 1, match.end(1) - 1))
 

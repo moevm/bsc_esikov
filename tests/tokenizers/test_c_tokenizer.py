@@ -271,6 +271,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x;")), "S{I{AM}}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x = func(x)) if(x % 2 == 0) y += x;")), "S{I{AM}}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x; else return 0;")), "S{I{AM}I{R}}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize('do { printf("Hello world! \n"); } while (0 > 1);')), "S{C}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("; (x > y) ? func1(): func2();")), "I{C}I{C}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z = (x > y) ? func1(): func2();")), "I{AC}I{AC}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z = (x > y) ? x + y - 2: x - y + 2;")), "I{AMM}I{AMM}")
