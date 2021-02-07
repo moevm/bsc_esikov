@@ -1,4 +1,5 @@
 import requests
+import sys
 from src.network.search_api import SearchAPI
 from src.network.github_api import GithubAPI
 
@@ -27,8 +28,18 @@ class GithubSearchAPI(SearchAPI):
             'Authorization': 'token ' + self._token,
             'accept': 'application/vnd.github.v3+json',
         }
-        response = requests.get(url, headers=headers, timeout=7)
-        response.raise_for_status()
+        try:
+            response = requests.get(url, headers=headers, timeout=7)
+            response.raise_for_status()
+        except requests.exceptions.Timeout as e:
+            print(str(e).split("'")[-2])
+            sys.exit(-1)
+        except requests.exceptions.ConnectionError as e:
+            print(str(e))
+            sys.exit(-1)
+        except requests.exceptions.HTTPError as e:
+            print(str(e))
+            sys.exit(-1)
         return response
 
     def search(self, func_name):

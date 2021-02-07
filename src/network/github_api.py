@@ -19,8 +19,23 @@ class GithubAPI:
             'Authorization': 'token ' + self.__token,
             'accept': 'application/vnd.github.v3+json',
         })
-        response = requests.get(address + api_url, headers=headers, params=params, timeout=7)
-        response.raise_for_status()
+        try:
+            response = requests.get(address + api_url, headers=headers, params=params, timeout=7)
+            response.raise_for_status()
+        except requests.exceptions.Timeout as e:
+            print(str(e).split("'")[-2])
+            sys.exit(-1)
+        except requests.exceptions.ConnectionError as e:
+            print(str(e))
+            sys.exit(-1)
+        except requests.exceptions.HTTPError as e:
+            print(str(e))
+            sys.exit(-1)
+        except KeyError as e:
+            # 5000 requests per hour
+            # api_url = 'rate_limit' - for check count available requests
+            print("Github API rate limit exceeded. Limit = 5000 requests per hour. Try later")
+            sys.exit(-1)
         return response
 
     def get_name_default_branch(self, owner_login, repo_name):
@@ -58,34 +73,28 @@ class GithubAPI:
     def get_files_generator_from_repo_url(self, repo_url):
         try:
             owner_login, repo_name = UrlParser.parse_github_repo(repo_url)
-            default_branch_name = self.get_name_default_branch(owner_login, repo_name)
-            sha_last_commit = self.get_sha_last_commit_in_default_branch(owner_login, repo_name, default_branch_name)
-            files_generator = self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
         except ValueError as e:
             print(str(e))
             sys.exit(-1)
-        except requests.exceptions.Timeout as e:
-            print(str(e).split("'")[-2])
-            sys.exit(-1)
-        except requests.exceptions.ConnectionError as e:
-            print(str(e))
-            sys.exit(-1)
-        except requests.exceptions.HTTPError as e:
-            print(str(e))
-            sys.exit(-1)
-        except KeyError as e:
-            # 5000 requests per hour
-            # api_url = 'rate_limit' - for check count available requests
-            print("Github API rate limit exceeded. Limit = 5000 requests per hour. Try later")
-            sys.exit(-1)
+
+        default_branch_name = self.get_name_default_branch(owner_login, repo_name)
+        sha_last_commit = self.get_sha_last_commit_in_default_branch(owner_login, repo_name, default_branch_name)
+        files_generator = self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
+
         return files_generator
 
     def get_file_from_url(self, file_url):
-        owner_login, repo_name, branch_name, path = UrlParser.parse_github_file_path(file_url)
+        try:
+            owner_login, repo_name, branch_name, path = UrlParser.parse_github_file_path(file_url)
+        except ValueError as e:
+            print(str(e))
+            sys.exit(-1)
+
         api_url = '/repos/{owner}/{repo}/contents/{path}'.format(owner=owner_login, repo=repo_name, path=path)
         params = {
             'ref': branch_name
         }
         response_json = self.__send_get_request(api_url, params=params).json()
         file = self.get_src_file_from_sha(owner_login, repo_name, response_json['sha'], "./" + path)
+
         return file
