@@ -202,12 +202,13 @@ class CTokenizer(Tokenizer):
 
     def _process(self, src):
         tokens = []
-        # Токенизация возврата из функции
-        tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
 
         # Токенизация тернарного оператора
         ternary_tokens, src = CTokenizer.get_tokens_ternary_operator(src)
         tokens += ternary_tokens
+
+        # Токенизация возврата из функции
+        tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
 
         # Токенизация указателей на функцию
         regex_for_func_ptr = r'\w+(\s*\*\s*)*\s*\((\s*\*\s*)+[\w+\[\]]+\s*\)\s*\([^=;]*\)\s*(?=[;=])'
@@ -422,17 +423,21 @@ class CTokenizer(Tokenizer):
     @staticmethod
     def get_tokens_ternary_operator(src, replace='.'):
         tokens = []
-        for match in re.finditer(r'(?<=[={;])([^={;]+)(\?[^:;]+)(:[^;]+;)', src, flags=re.ASCII):
-            tokens.append(Token(CTokenizer.TOKENS["if"], match.start(2), match.start(2)))
-            tokens.append(Token("{", match.start(2), match.start(2) + 1))
-            tokens.append(Token("}", match.end(2) - 1, match.end(2) - 1))
-            tokens.append(Token(CTokenizer.TOKENS["if"], match.start(3), match.start(3)))
-            tokens.append(Token("{", match.start(3), match.start(3) + 1))
-            tokens.append(Token("}", match.end(3) - 1, match.end(3) - 1))
-            if src[match.start(0) - 1] == "=":
-                tokens.append(Token(CTokenizer.TOKENS["assign"], match.start(2), match.start(2) + 2))
-                tokens.append(Token(CTokenizer.TOKENS["assign"], match.start(3), match.start(3) + 2))
-                src = src[:match.start(0) - 1] + "." + src[match.start(0):]
-            src = src[:match.start(3)] + ";" + src[match.start(3) + 1:]
-            src = src[:match.start(1)] + replace * (match.end(1) - match.start(1)) + src[match.end(1):]
+        for match in re.finditer(r'[;{}()\w]\s*(=|\breturn\b)?(\s*\(?[^;<>=]+?(==|>=|<=|>|<)[^;<>=]+?\)?\s*)(\?[^:;]+)(:[^;]+;)', src, flags=re.ASCII):
+            tokens.append(Token(CTokenizer.TOKENS["if"], match.start(4), match.start(4)))
+            tokens.append(Token("{", match.start(4), match.start(4) + 1))
+            tokens.append(Token("}", match.end(4) - 1, match.end(4) - 1))
+            tokens.append(Token(CTokenizer.TOKENS["if"], match.start(5), match.start(5)))
+            tokens.append(Token("{", match.start(5), match.start(5) + 1))
+            tokens.append(Token("}", match.end(5) - 1, match.end(5) - 1))
+            if match[1] == "=":
+                tokens.append(Token(CTokenizer.TOKENS["assign"], match.start(4), match.start(4) + 2))
+                tokens.append(Token(CTokenizer.TOKENS["assign"], match.start(5), match.start(5) + 2))
+                src = src[:match.start(1)] + "." + src[match.start(1) + 1:]
+            if match[1] == "return":
+                tokens.append(Token(CTokenizer.TOKENS["return"], match.start(4), match.start(4) + 2))
+                tokens.append(Token(CTokenizer.TOKENS["return"], match.start(5), match.start(5) + 2))
+                src = src[:match.start(1)] + "." * (match.end(1) - match.start(1)) + src[match.end(1):]
+            src = src[:match.start(5)] + ";" + src[match.start(5) + 1:]
+            src = src[:match.start(2)] + replace * (match.end(2) - match.start(2)) + src[match.end(2):]
         return tokens, src

@@ -280,6 +280,9 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z = (x > y) ? x : y;")), "I{A}I{A}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z=(x>y)?x:y;")), "I{A}I{A}")
         self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(";int z = (x > y) ? x : y;")), "I{A}I{A}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("; x == 10 ? func(x) : 64 + x;")), "I{C}I{M}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("y = x == 10 ? func(x) : 64 + x;")), "I{AC}I{AM}")
+        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(";return x == 10 ? func(x) : 64 + x;")),"I{RC}I{RM}")
 
         switch_str = "int updateCriticalNumber(int value){switch (value){case 0:return value + 64;break;case -10:{" \
                      "return 10;break;}case 10:{return func(value);break;}}} "
