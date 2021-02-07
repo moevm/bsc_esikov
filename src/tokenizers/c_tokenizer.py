@@ -423,7 +423,7 @@ class CTokenizer(Tokenizer):
     @staticmethod
     def get_tokens_ternary_operator(src, replace='.'):
         tokens = []
-        for match in re.finditer(r'[;{}()\w]\s*(=|\breturn\b)?(\s*\(?[^;<>=]+?(==|>=|<=|>|<)[^;<>=]+?\)?\s*)(\?[^:;]+)(:[^;]+;)', src, flags=re.ASCII):
+        for match in re.finditer(r'(?<=[;}{()\w])\s*(=|\breturn\b)?([^;<>=]+(==|>=|<=|>|<)[^;<>=?]+)(\?[^:;]+)(:[^;]+;)', src, flags=re.ASCII):
             tokens.append(Token(CTokenizer.TOKENS["if"], match.start(4), match.start(4)))
             tokens.append(Token("{", match.start(4), match.start(4) + 1))
             tokens.append(Token("}", match.end(4) - 1, match.end(4) - 1))
