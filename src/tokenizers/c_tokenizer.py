@@ -255,9 +255,10 @@ class CTokenizer(Tokenizer):
                 tokens.append(Token("}", match.start(5) - 1, match.start(5) - 1))
 
         # Токенизация условных конструкций
-        if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w])|\belse\b', "if")
+        if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w.])|\belse\b', "if")
         src = CTokenizer.replace_tokens_in_src(src, if_else_tokens)
         tokens += if_else_tokens
+
         # Токенизация определения функции
         function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)+|\s+)\w+\s*\([^{]*\)\s*(?={)', "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
