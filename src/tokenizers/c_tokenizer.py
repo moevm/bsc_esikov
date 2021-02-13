@@ -212,16 +212,6 @@ class CTokenizer(Tokenizer):
         return src
 
     @staticmethod
-    def get_function_names(src):
-        functions = set()
-        for match in re.finditer(r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*(\w+)\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{', src):
-            functions |= {match[3]}
-        for match in re.finditer(r'\w+((\s*\*\s*)+|\s+)(\w+)\s*\([^{]*\)\s*{', src):
-            functions |= {match[3]}
-        functions -= {"main"}
-        return list(functions)
-
-    @staticmethod
     def get_tokens_missing_curly_braces(src):
         tokens = []
 
@@ -289,3 +279,13 @@ class CTokenizer(Tokenizer):
             src = src[:match.start(5)] + ";" + src[match.start(5) + 1:]
             src = src[:match.start(2)] + replace * (match.end(2) - match.start(2)) + src[match.end(2):]
         return tokens, src
+
+    @staticmethod
+    def get_function_names(src):
+        functions = set()
+        for match in re.finditer(r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*(\w+)\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*{', src):
+            functions |= {match[3]}
+        for match in re.finditer(r'\w+((\s*\*\s*)+|\s+)(\w+)\s*\([^{]*\)\s*{', src):
+            functions |= {match[3]}
+        functions -= {"main"}
+        return list(functions)

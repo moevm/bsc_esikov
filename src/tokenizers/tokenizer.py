@@ -21,3 +21,8 @@ class Tokenizer(ABC):
     @abstractmethod
     def replace_comments(src):
         pass
+
+    @staticmethod
+    @abstractmethod
+    def get_function_names(src):
+        pass
