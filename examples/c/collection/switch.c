@@ -7,18 +7,18 @@ int updateCriticalNumber(int value)
     {
         case 0:
         {
-            return value + 64;
-            break;
+            int y = 20;
+            value = 45 - 21 + func(temp);
+            return value;
         }
         case -10:
-        {
             return 10;
-            break;
-        }
         case 10:
         {
             return func(value);
             break;
         }
+        default:
+            return value + 64;
     }
 }

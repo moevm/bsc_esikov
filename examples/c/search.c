@@ -5,7 +5,9 @@ int updateCriticalNumber(int value)
 {
     if (value == 0)
     {
-        return value + 64;
+        int temp = 20;
+        value = func(temp) + 45 - 21;
+        return value;
     }
     if (value == -10)
     {
@@ -14,5 +16,9 @@ int updateCriticalNumber(int value)
     if (value == 10)
     {
         return func(value);
+    }
+    else
+    {
+        return value + 64;
     }
 }

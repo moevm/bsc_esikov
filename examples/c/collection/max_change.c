@@ -7,22 +7,24 @@
 
 
 // function
-long myFunc(long x)
+long abcdefghijklmn(long x)
 {
     //double value = 0.456;
     // if
     if (x == 0)
     {
-        return x + 64;
+        signed        hffdf=20;
+
+
+        name=   45   + func(hffdf)
+                                    - 21;
+        return name;
                                 }
     if (x == -10)
 
                             return 10;
-        if (x == 10)
-                    {
-            // return
-            return func(x);
-            }
+    // return
+        return x == 10 ? func(x) :    64 +        x;
     return 0;
 }
 /*
