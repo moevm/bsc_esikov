@@ -27,7 +27,8 @@ def scan_dir(comparable_file):
         dir_scanner = SCANNER.scan
 
     for file in dir_scanner(SEARCH_DIR):
-        similarity_percentage = HESKEL_ALGO.search(TOKENIZER.fast_tokenize(file.src))
+        token_str = Token.get_tokens_str_from_token_list(TOKENIZER.tokenize(file.src))
+        similarity_percentage = HESKEL_ALGO.search(token_str)
         if similarity_percentage > LIMIT and comparable_file.path != file.path:
             file.similarity_percentage = similarity_percentage
             yield file
@@ -63,14 +64,21 @@ if __name__ == "__main__":
     SCANNER = DirScanner(FILE_EXTENSION)
 
     search_file = get_search_file()
-    HESKEL_ALGO = Heskel(TOKENIZER.fast_tokenize(search_file.src))
     search_file.tokens = TOKENIZER.tokenize(search_file.src)
-    GREEDY_ALGO = GreedyStringTiling(Token.get_tokens_str_from_token_list(search_file.tokens))
+    HESKEL_ALGO = Heskel(search_file.tokens_str)
+    GREEDY_ALGO = GreedyStringTiling(search_file.tokens_str)
 
     if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
         func_names = CTokenizer.get_function_names(search_file.src)
         for file in CodeSearcher.search_per_function_names(func_names, FILE_EXTENSION, settings['GITHUB_TOKEN']):
             print(file.source + " " + file.path)
+            file.tokens = TOKENIZER.tokenize(file.src)
+            similarity_tokens_sequence = GREEDY_ALGO.search(file.tokens_str)
+            sim = Similarity(search_file, file, similarity_tokens_sequence)
+            check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
+            for src in detected_file_similarity_src:
+                print(src)
+            print("\n")
     else:
         is_find_similarity = False
         for sim in get_similarity(search_file):

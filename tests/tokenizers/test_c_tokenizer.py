@@ -10,23 +10,6 @@ class TestCTokenizer(unittest.TestCase):
         self.switch_str = 'switch(x) { case 1: { printf("x = 1"); break; } case 2: printf("x = 2"); break; ' \
                           'default: { printf("x is undefined"); break;}}'
 
-    def test_clear_comments(self):
-        self.assertEqual(CTokenizer.clear_comments(""), "")
-        self.assertEqual(CTokenizer.clear_comments("//comment"), "")
-        self.assertEqual(CTokenizer.clear_comments("// comment"), "")
-        self.assertEqual(CTokenizer.clear_comments("//comment\n"), "")
-        self.assertEqual(CTokenizer.clear_comments("// comment\n"), "")
-        self.assertEqual(CTokenizer.clear_comments("//  comment //comment"), "")
-        self.assertEqual(CTokenizer.clear_comments("int x = 0; // integer x is 0"), "int x = 0; ")
-        self.assertEqual(CTokenizer.clear_comments("// integer x is 0\nint x = 0;"), "int x = 0;")
-        self.assertEqual(CTokenizer.clear_comments("//comment1\nint x = 0;\n// comment2"), "int x = 0;\n")
-        self.assertEqual(CTokenizer.clear_comments("/*comment*/"), "")
-        self.assertEqual(CTokenizer.clear_comments("/* comment */"), "")
-        self.assertEqual(CTokenizer.clear_comments(" /* comment */ "), "  ")
-        self.assertEqual(CTokenizer.clear_comments("/*int x = 0; float y = 1.0; */"), "")
-        self.assertEqual(CTokenizer.clear_comments("/*int x = 0;\nfloat y = 1.0;\n*/"), "")
-        self.assertEqual(CTokenizer.clear_comments("/*\nint x = 0;\n*/\nfloat y = 1.0;\n/*\nint x = 0;\n*/"), "\nfloat y = 1.0;\n")
-
     def test_replace_comments(self):
         self.assertEqual(CTokenizer.replace_comments(""), "")
         self.assertEqual(CTokenizer.replace_comments("//comment"), " " * 9)
@@ -44,13 +27,6 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(CTokenizer.replace_comments("/*int x = 0;\nfloat y = 1.0;\n*/"), " " * 30)
         self.assertEqual(CTokenizer.replace_comments("/*\nint x = 0;\n*/\nfloat y = 1.0;\n/*\nint x = 0;\n*/"), " " * 16 + "\nfloat y = 1.0;\n" + " " * 16)
 
-    def test_clear_import(self):
-        self.assertEqual(CTokenizer.clear_import("#include <stdio.h>"), "")
-        self.assertEqual(CTokenizer.clear_import(' #include "max.h"  '), "")
-        self.assertEqual(CTokenizer.clear_import('#include <stdio.h>\n#include "max.h"'), "")
-        self.assertEqual(CTokenizer.clear_import('#include <stdio.h>\n#include "max.h"\n'), "")
-        self.assertEqual(CTokenizer.clear_import('#include <stdio.h>\n#include "max.h"\nint x = 0 ; \n'), "int x = 0 ; \n")
-
     def test_replace_import(self):
         self.assertEqual(CTokenizer.replace_import("#include <stdio.h>"), " " * 18)
         self.assertEqual(CTokenizer.replace_import(' #include "max.h"  '), " " + " " * 16 + "  ")
@@ -58,50 +34,12 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\n'), " " * 18 + "\n" + " " * 16 + "\n")
         self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\nint x = 0 ; \n'), " " * 18 + "\n" + " " * 16 + "\nint x = 0 ; \n")
 
-    def test_find_index_end_switch(self):
-        self.assertEqual(CTokenizer.find_index_end_switch(CTokenizer.clear_space(self.switch_str)), 103)
-        self.assertEqual(CTokenizer.find_index_end_switch(CTokenizer.clear_space(self.switch_str * 2)), 103)
-        self.assertEqual(CTokenizer.find_index_end_switch(CTokenizer.clear_space(self.switch_str * 2), 104), 207)
-        self.assertIsNone(CTokenizer.find_index_end_switch("if(a > b) return a; else a++;"))
-        self.assertEqual(CTokenizer.find_index_end_switch(self.switch_str), 124)
-        self.assertEqual(CTokenizer.find_index_end_switch(self.switch_str * 2), 124)
-        self.assertEqual(CTokenizer.find_index_end_switch(self.switch_str * 2, 125), 249)
+    def get_tokens_str_after_tokenize(self, src):
+        tokens = self.tokenizer.tokenize(src)
+        return Token.get_tokens_str_from_token_list(tokens)
 
-    def test_replace_break_in_switch(self):
-        replace_str = CTokenizer.replace_break_in_switch(CTokenizer.clear_space(self.switch_str))
-        self.assertEqual(replace_str.find("break;"), -1)
-        replace_str = CTokenizer.replace_break_in_switch(CTokenizer.clear_space(self.switch_str * 2))
-        self.assertEqual(replace_str.find("break;"), -1)
-        replace_str = "while(x < 10) x += 1;"
-        self.assertEqual(CTokenizer.replace_break_in_switch(replace_str), replace_str)
-        replace_str = CTokenizer.replace_break_in_switch(self.switch_str)
-        self.assertEqual(replace_str.find("break;"), -1)
-        correct_str = 'switch(x) { case 1: { printf("x = 1"); ' + CTokenizer.NOT_TOKEN * 7 + \
-                      '} case 2: printf("x = 2"); ' + CTokenizer.NOT_TOKEN * 6 + \
-                      '}default: { printf("x is undefined"); ' + CTokenizer.NOT_TOKEN * 6 + '};'
-        self.assertEqual(replace_str, correct_str)
-        replace_str = CTokenizer.replace_break_in_switch(self.switch_str * 2)
-        self.assertEqual(replace_str.find("break;"), -1)
-
-    def test_place_curly_braces_in_src(self):
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("IR;"), "I{R;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("I{R;}"), "I{R;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("IR;IR;IR;"), "I{R;}I{R;}I{R;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("I{R;}I{R;}I{R;}"), "I{R;}I{R;}I{R;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("SC;"), "S{C;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{C;}"), "S{C;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("SC;"), "S{C;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{C;}"), "S{C;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("SAM;"), "S{AM;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{AM;}"), "S{AM;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("SIAM;"), "S{I{AM;}}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{I{AM;}}"), "S{I{AM;}}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("S{IAM;}"), "S{I{AM;}}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("SI{AM;}"), "S{I{AM;}}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("SC;SC;"), "S{C;}S{C;}")
-        self.assertEqual(CTokenizer.place_curly_braces_in_src("SIAM;SIAM;"), "S{I{AM;}}S{I{AM;}}")
-
-    def tokenize_basic_test_case(self, tokenizer):
+    def test_tokenize(self):
+        tokenizer = self.get_tokens_str_after_tokenize
         self.assertEqual(tokenizer("// comment"), "")
         self.assertEqual(tokenizer("#include <stdio.h>"), "")
         self.assertEqual(tokenizer("unsigned long testValue = 9999999;"), "NA")
@@ -169,9 +107,9 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("float *const ptr=&i;"), "PA")
         self.assertEqual(tokenizer("const float *const ptr=&i;"), "PA")
         self.assertEqual(tokenizer("float a = 10.0 / 4;"), "DAM")
-        #self.assertEqual(tokenizer("int value = 45 + func(a, b);"), "NAM")
-        #self.assertEqual(tokenizer("int value = func(y) + x;"), "NAM")
-        #self.assertEqual(tokenizer("int value = x + y - 2;"), "NAMM")
+        self.assertEqual(tokenizer("int value = 45 + func(a, b);"), "NAM")
+        self.assertEqual(tokenizer("int value = func(y) + x;"), "NAM")
+        self.assertEqual(tokenizer("int value = x + y - 2;"), "NAMM")
         self.assertEqual(tokenizer("int value = (45 + 94) / 4;"), "NAMM")
         self.assertEqual(tokenizer("return a * b;"), "RM")
         self.assertEqual(tokenizer("return func();"), "RC")
@@ -234,7 +172,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('union code { int digit; char letter; };'), "V{NB}")
         self.assertEqual(tokenizer('struct point{ unsigned int x:5; unsigned int y:3;};'), "V{NN}")
         self.assertEqual(tokenizer("if (a > b) return a; else return b;"), "I{R}I{R}")
-        #self.assertEqual(tokenizer("if ((a > b) && (c > b)) return a; else return b;"), "I{R}I{R}")
+        self.assertEqual(tokenizer("if ((a > b) && (c > b)) return a; else return b;"), "I{R}I{R}")
         # self.assertEqual(tokenizer("if(c > b) return c; else if(b < c) return b; else return 0;"), "I{R}I{R}I{R}")
         self.assertEqual(tokenizer("if(func(a, b)) return a;"), "I{R}")
         self.assertEqual(tokenizer("if(func(a, b)){ a += b; return a;}"), "I{AMR}")
@@ -247,64 +185,41 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("while(x < 10) x += 1;"), "S{AM}")
         self.assertEqual(tokenizer("for(int i = 0; i < 10; i++) compare(func(i), 0);"), "S{C}")
         self.assertEqual(tokenizer("if(x < 10) int a;"), "I{N}")
-        #self.assertEqual(tokenizer("if(x < 10) int a = 10;"), "I{NA}")
-        #self.assertEqual(tokenizer("if(x < 10) if(x % 2 == 0) y += x;"), "I{I{AM}}")
-        #self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x;"), "S{I{AM}}")
-        #self.assertEqual(tokenizer("while(x = func(x)) if(x % 2 == 0) y += x;"), "S{I{AM}}")
-        #self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x; else return 0;"), "SIAMIR")
-
-        #self.assertEqual(self.tokenizer.tokenize("z = (x > y) ? x : y;"), "I{A}I{A}")
-        # self.assertEqual(self.tokenizer.tokenize("int z = x > y ? x + 1 : y % 2;"), "I{NAM}I{NAM}")
-        #self.assertEqual(self.tokenizer.tokenize("z = (x > y) ? func1(): func2();"), "I{AC}I{AC}")
-        #self.assertEqual(self.tokenizer.tokenize(";\n(x > y) ? func1(): func2();"), "I{C}I{C}")
+        self.assertEqual(tokenizer("if(x < 10) int a = 10;"), "I{NA}")
+        self.assertEqual(tokenizer("if(x < 10) if(x % 2 == 0) y += x;"), "I{I{AM}}")
+        self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x;"), "S{I{AM}}")
+        self.assertEqual(tokenizer("while(x = func(x)) if(x % 2 == 0) y += x;"), "S{I{AM}}")
+        self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x; else return 0;"), "S{I{AM}I{R}}")
+        self.assertEqual(tokenizer('do { printf("Hello world! \n"); } while (0 > 1);'), "S{C}")
+        self.assertEqual(tokenizer('if (x > 0) for (j = 0; j < 10; j++) func(x, j);'), "I{S{C}}")
+        self.assertEqual(tokenizer("; (x > y) ? func1(): func2();"), "I{C}I{C}")
+        self.assertEqual(tokenizer("z = (x > y) ? func1(): func2();"), "I{AC}I{AC}")
+        self.assertEqual(tokenizer("z = (x > y) ? x + y - 2: x - y + 2;"), "I{AMM}I{AMM}")
+        self.assertEqual(tokenizer("z = (x > y) ? x + func(y): x - func(y) + 2;"), "I{AM}I{AMM}")
+        self.assertEqual(tokenizer("z = (x > y) ? x : y;"), "I{A}I{A}")
+        self.assertEqual(tokenizer("z=(x>y)?x:y;"), "I{A}I{A}")
+        self.assertEqual(tokenizer(";int z = (x > y) ? x : y;"), "I{A}I{A}")
+        self.assertEqual(tokenizer(" }  int z = (x > y) ? x : y;"), "}I{A}I{A}")
+        self.assertEqual(tokenizer(" } z = (x > y) ? x : y;"), "}I{A}I{A}")
+        self.assertEqual(tokenizer("; x == 10 ? func(x) : 64 + x;"), "I{C}I{M}")
+        self.assertEqual(tokenizer("y = x == 10 ? func(x) : 64 + x;"), "I{AC}I{AM}")
+        self.assertEqual(tokenizer(";return x == 10 ? func(x) : 64 + x;"), "I{RC}I{RM}")
         self.assertEqual(tokenizer(self.switch_str), "I{C}I{C}I{C}")
-
-    def test_fast_tokenize(self):
-        self.tokenize_basic_test_case(self.tokenizer.fast_tokenize)
-
-    def test_tokenize(self):
-        self.tokenize_basic_test_case(self.tokenize_runner)
-
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("if ((a > b) && (c > b)) return a; else return b;")), "I{R}I{R}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("if(x < 10) int a = 10;")), "I{NA}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("if(x < 10) if(x % 2 == 0) y += x;")), "I{I{AM}}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x;")), "S{I{AM}}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x = func(x)) if(x % 2 == 0) y += x;")), "S{I{AM}}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("while(x < 10) if(x % 2 == 0) y += x; else return 0;")), "S{I{AM}I{R}}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize('do { printf("Hello world! \n"); } while (0 > 1);')), "S{C}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize('if (x > 0) for (j = 0; j < 10; j++) func(x, j);')), "I{S{C}}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("; (x > y) ? func1(): func2();")), "I{C}I{C}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z = (x > y) ? func1(): func2();")), "I{AC}I{AC}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z = (x > y) ? x + y - 2: x - y + 2;")), "I{AMM}I{AMM}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z = (x > y) ? x + func(y): x - func(y) + 2;")), "I{AM}I{AMM}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z = (x > y) ? x : y;")), "I{A}I{A}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("z=(x>y)?x:y;")), "I{A}I{A}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(";int z = (x > y) ? x : y;")), "I{A}I{A}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(" }  int z = (x > y) ? x : y;")), "}I{A}I{A}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(" } z = (x > y) ? x : y;")), "}I{A}I{A}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("; x == 10 ? func(x) : 64 + x;")), "I{C}I{M}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize("y = x == 10 ? func(x) : 64 + x;")), "I{AC}I{AM}")
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(";return x == 10 ? func(x) : 64 + x;")),"I{RC}I{RM}")
-
         switch_str = "int updateCriticalNumber(int value){switch (value){case 0:return value + 64;break;case -10:{" \
                      "return 10;break;}case 10:{return func(value);break;}}} "
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        self.assertEqual(tokenizer(switch_str), "F{I{RM}I{R}I{RC}}")
         switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: return value + 64; break; " \
                      "case -10: { return 10; break; } case 10: { return func(value); break; }}} "
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        self.assertEqual(tokenizer(switch_str), "F{I{RM}I{R}I{RC}}")
         switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; break;}" \
                      "case -10:  return 10; break; default: { return func(value); break; }}} "
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        self.assertEqual(tokenizer(switch_str), "F{I{RM}I{R}I{RC}}")
         switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; break;}" \
                      "case -10:  return 10; break; default:  return func(value); break; }} "
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{R}I{RC}}")
+        self.assertEqual(tokenizer(switch_str), "F{I{RM}I{R}I{RC}}")
         switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; }" \
                      "case -10: if (x > 80) return 10; default:  return func(value);}} "
-        self.assertEqual(Token.get_tokens_str_from_token_list(self.tokenizer.tokenize(switch_str)), "F{I{RM}I{I{R}}I{RC}}")
-
-    def tokenize_runner(self, src):
-        tokens = self.tokenizer.tokenize(src)
-        return Token.get_tokens_str_from_token_list(tokens)
+        self.assertEqual(tokenizer(switch_str), "F{I{RM}I{I{R}}I{RC}}")
 
     def assert_tokens_list(self, current, true):
         self.assertEqual(len(current), len(true))

@@ -12,14 +12,11 @@ def test_c_file(path_file, count_string):
     print("Файл из " + str(count_string) + " строк кода:\n")
 
     start_time = time.time()
-    heskel_algo = Heskel(TOKENIZER.fast_tokenize(search_file.src))
-    print("Быстрая токенизация: %s секунд" % (time.time() - start_time))
-
-    start_time = time.time()
     search_file.tokens = TOKENIZER.tokenize(search_file.src)
     print("Обычная токенизация: %s секунд" % (time.time() - start_time))
 
-    greedy_algo = GreedyStringTiling(Token.get_tokens_str_from_token_list(search_file.tokens))
+    heskel_algo = Heskel(search_file.tokens_str)
+    greedy_algo = GreedyStringTiling(search_file.tokens_str)
 
     files = []
     for file in SCANNER.scan('./examples/c/big_files'):
@@ -29,20 +26,13 @@ def test_c_file(path_file, count_string):
 
     start_time = time.time()
     for file in files:
-        token_str.append(TOKENIZER.fast_tokenize(file.src))
-    print("Быстрая токенизация 10 файлов из 1000 строк: %s секунд" % (time.time() - start_time))
+        token_str.append(Token.get_tokens_str_from_token_list(TOKENIZER.tokenize(file.src)))
+    print("Токенизация 10 файлов из " + str(count_string) + " строк кода: %s секунд" % (time.time() - start_time))
 
     start_time = time.time()
     for tokens in token_str:
         heskel_algo.search(tokens)
     print("Алгоритм Хескела: %s секунд" % (time.time() - start_time))
-
-    token_str = []
-
-    start_time = time.time()
-    for file in files:
-        token_str.append(Token.get_tokens_str_from_token_list(TOKENIZER.tokenize(file.src)))
-    print("Обычная токенизация 10 файлов из 1000 строк: %s секунд" % (time.time() - start_time))
 
     print("\nАлгоритм жадного строкового замощения:")
     start_time = time.time()
@@ -67,4 +57,4 @@ if __name__ == '__main__':
     big_file = DirScanner.read_file('./examples/c/10000string.c')
     start_time = time.time()
     big_file.tokens = TOKENIZER.tokenize(big_file.src)
-    print("Обычная токенизация файла в 10000 строк: %s секунд" % (time.time() - start_time))
+    print("Токенизация файла из 10000 строк: %s секунд" % (time.time() - start_time))
