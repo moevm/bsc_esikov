@@ -5,7 +5,6 @@ from src.tokenizers.c_tokenizer import CTokenizer
 from src.console.dir_scanner import DirScanner
 from src.algorithms.heskel import Heskel
 from src.algorithms.greedy_string_tiling import GreedyStringTiling
-from src.token import Token
 from src.similarity import Similarity
 from src.src_file import SrcFile
 from src.network.github_api import GithubAPI
@@ -21,14 +20,18 @@ def get_search_file():
 
 
 def scan_dir(comparable_file):
-    if UrlParser.is_url(SEARCH_DIR):
-        dir_scanner = GITHUB_API.get_files_generator_from_repo_url
+    if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
+        func_names = TOKENIZER.get_function_names(comparable_file.src)
+        dir_scan_generator = CodeSearcher.search_per_function_names(func_names, FILE_EXTENSION, settings['GITHUB_TOKEN'])
     else:
-        dir_scanner = SCANNER.scan
+        if UrlParser.is_url(SEARCH_DIR):
+            dir_scan_generator = GITHUB_API.get_files_generator_from_repo_url(SEARCH_DIR)
+        else:
+            dir_scan_generator = SCANNER.scan(SEARCH_DIR)
 
-    for file in dir_scanner(SEARCH_DIR):
-        token_str = Token.get_tokens_str_from_token_list(TOKENIZER.tokenize(file.src))
-        similarity_percentage = HESKEL_ALGO.search(token_str)
+    for file in dir_scan_generator:
+        file.tokens = TOKENIZER.tokenize(file.src)
+        similarity_percentage = HESKEL_ALGO.search(file.tokens_str)
         if similarity_percentage > LIMIT and comparable_file.path != file.path:
             file.similarity_percentage = similarity_percentage
             yield file
@@ -36,9 +39,33 @@ def scan_dir(comparable_file):
 
 def get_similarity(comparable_file):
     for file in scan_dir(comparable_file):
-        file.tokens = TOKENIZER.tokenize(file.src)
         similarity_tokens_sequence = GREEDY_ALGO.search(file.tokens_str)
         yield Similarity(comparable_file, file, similarity_tokens_sequence)
+
+
+def print_similarity_list(similarity_list):
+    for sim in similarity_list:
+        check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
+        print("*" * 60)
+        print(sim.check_file_path + ":")
+        print("-" * 60)
+        for src in check_file_similarity_src:
+            print(src)
+            print("-" * 60)
+
+        if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
+            source = sim.source_similarity + " " + sim.detected_file_path
+        else:
+            source = sim.detected_file_path
+        print(source + "  --  " + str(round(sim.similarity_percentage)) + "% сходства:")
+        print("-" * 60)
+
+        for src in detected_file_similarity_src:
+            print(src)
+            print("-" * 60)
+        print("\n")
+    if len(similarity_list) == 0:
+        print("Не было обнаружено файлов с процентом совпадения > " + str(LIMIT))
 
 
 if __name__ == "__main__":
@@ -68,33 +95,7 @@ if __name__ == "__main__":
     HESKEL_ALGO = Heskel(search_file.tokens_str)
     GREEDY_ALGO = GreedyStringTiling(search_file.tokens_str)
 
-    if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
-        func_names = CTokenizer.get_function_names(search_file.src)
-        for file in CodeSearcher.search_per_function_names(func_names, FILE_EXTENSION, settings['GITHUB_TOKEN']):
-            print(file.source + " " + file.path)
-            file.tokens = TOKENIZER.tokenize(file.src)
-            similarity_tokens_sequence = GREEDY_ALGO.search(file.tokens_str)
-            sim = Similarity(search_file, file, similarity_tokens_sequence)
-            check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
-            for src in detected_file_similarity_src:
-                print(src)
-            print("\n")
-    else:
-        is_find_similarity = False
-        for sim in get_similarity(search_file):
-            check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
-            print("*" * 60)
-            print(sim.check_file_path + ":")
-            print("-" * 60)
-            for src in check_file_similarity_src:
-                print(src)
-                print("-" * 60)
-            print(sim.detected_file_path + "  --  " + str(round(sim.similarity_percentage)) + "% сходства:")
-            print("-" * 60)
-            for src in detected_file_similarity_src:
-                print(src)
-                print("-" * 60)
-            print("\n")
-            is_find_similarity = True
-        if is_find_similarity is False:
-            print("В директории не было обнаружено файлов с процентом совпадения > " + str(LIMIT))
+    similarity = []
+    for sim in get_similarity(search_file):
+        similarity.append(sim)
+    print_similarity_list(similarity)
