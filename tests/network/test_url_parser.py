@@ -8,9 +8,7 @@ class TestUrlParser(unittest.TestCase):
         self.assertEqual(owner, 'microsoft')
         self.assertEqual(repo, 'TypeScript')
 
-        owner, repo = UrlParser.parse_github_repo('https://github.com/microsoft/TypeScript/blob/master/.gitattributes')
-        self.assertEqual(owner, 'microsoft')
-        self.assertEqual(repo, 'TypeScript')
+        self.assertRaises(ValueError, UrlParser.parse_github_repo, 'https://github.com/microsoft/TypeScript/blob/master/.gitattributes')
 
         self.assertRaises(ValueError, UrlParser.parse_github_repo, 'https://www.google.com/')
 
@@ -49,6 +47,11 @@ class TestUrlParser(unittest.TestCase):
         self.assertTrue(UrlParser.is_url('https://github.com'))
         self.assertTrue(UrlParser.is_url('https://github.com/'))
         self.assertFalse(UrlParser.is_url('./dir/file.ext'))
+
+    def test_is_github_repo_url(self):
+        self.assertTrue(UrlParser.is_github_repo_url('https://github.com/microsoft/TypeScript'))
+        self.assertFalse(UrlParser.is_github_repo_url('https://github.com/microsoft/TypeScript/blob/master/.gitattributes'))
+        self.assertFalse(UrlParser.is_github_repo_url('https://www.google.com/'))
 
 
 if __name__ == '__main__':

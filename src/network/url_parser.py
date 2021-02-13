@@ -7,9 +7,22 @@ class UrlParser:
             return False
 
     @staticmethod
+    def is_github_repo_url(url):
+        substrings_url = url.split('/')
+        if len(substrings_url) != 5:
+            return False
+        if substrings_url[1] != '':
+            return False
+        if substrings_url[2] != 'github.com':
+            return False
+        if substrings_url[0] == 'https:' or substrings_url[0] == 'http:':
+            return True
+        return False
+
+    @staticmethod
     def parse_github_repo(github_repo_url):
-        substrings_url = github_repo_url.split('/')
-        if substrings_url[2] == 'github.com':
+        if UrlParser.is_github_repo_url(github_repo_url):
+            substrings_url = github_repo_url.split('/')
             # [3] - owner repo
             # [4] - repo name
             return substrings_url[3], substrings_url[4]
