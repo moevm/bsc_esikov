@@ -8,37 +8,29 @@ class UrlParser:
 
     @staticmethod
     def parse_github_repo(github_repo_url):
-        return UrlParser.__github_parse(github_repo_url, UrlParser.__github_repo_return_func)
-
-    @staticmethod
-    def __github_repo_return_func(substrings_url):
-        # [3] - owner repo
-        # [4] - repo name
-        return substrings_url[3], substrings_url[4]
-
-    @staticmethod
-    def parse_github_file_path(github_file_path):
-        return UrlParser.__github_parse(github_file_path, UrlParser.__github_file_path_return_func)
-
-    @staticmethod
-    def __github_file_path_return_func(substrings_url):
-        file_path = ""
-        # [7] - begin file path in repo
-        for i in range(7, len(substrings_url)):
-            file_path += substrings_url[i] + "/"
-        file_path = file_path[:-1]  # delete last "/"
-        # [5] - object type: blob, tree...
-        if substrings_url[5] != 'blob':
-            raise ValueError('Переданный путь не является путём до файла в github репозитории')
-        # [3] - owner repo
-        # [4] - repo name
-        # [6] - branch name
-        return substrings_url[3], substrings_url[4], substrings_url[6], file_path
-
-    @staticmethod
-    def __github_parse(path, return_func):
-        substrings_url = path.split('/')
+        substrings_url = github_repo_url.split('/')
         if substrings_url[2] == 'github.com':
-            return return_func(substrings_url)
+            # [3] - owner repo
+            # [4] - repo name
+            return substrings_url[3], substrings_url[4]
         else:
             raise ValueError('Url к github репозиторию не содержит "github.com"')
+
+    @staticmethod
+    def parse_github_content_path(github_content_path):
+        substrings_url = github_content_path.split('/')
+        if substrings_url[2] != 'github.com':
+            raise ValueError('Url к github репозиторию не содержит "github.com"')
+        path = ""
+        # [7] - begin content path in repo
+        for i in range(7, len(substrings_url)):
+            path += substrings_url[i] + "/"
+        path = path[:-1]  # delete last "/"
+        # [5] - object type: blob, tree...
+        if substrings_url[5] == 'blob' or substrings_url[5] == 'tree':
+            # [3] - owner repo
+            # [4] - repo name
+            # [6] - branch name
+            return substrings_url[3], substrings_url[4], substrings_url[6], path
+        else:
+            raise ValueError('Переданный url не является путём до содержимого github репозитория')

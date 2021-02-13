@@ -4,26 +4,26 @@
 
 Переименовать файл `.env.example` в `.env` и внести в него свои данные, согласно представленному шаблону.
 
-Для запуска необходимо в качестве параметров передать путь до проверяемого файла .c:
+Для запуска необходимо в качестве параметра передать путь до проверяемого файла ```.c``` или до проверяемой директории:
 ```
-python3 main.py -f ../program.c
+python3 main.py -c ../program.c
 ```
 
 Если необходимо осуществить поиск в конкретной директории, то нужно передать соответствующий путь с помощью параметра ``-d``:
 ```
-python3 main.py -f ../program.c -d ../search_dir
+python3 main.py -c ../program.c -d ../search_dir
 ```
 
 Один или оба параметра могут быть url к github файлам и репозиториям:
 ```
-python3 main.py -f https://github.com/owner/repo/blob/master/src/file.c -d https://github.com/owner/repo
+python3 main.py -c https://github.com/owner/repo/blob/master/src/file.c -d https://github.com/owner/repo
 ```
 
 ## Параметры
 
 ### Обязательные
 
-* Путь до проверяемого файла в файловой системе или на github: `-f` или `--file`
+* Путь до проверяемого файла в файловой системе или на github: `-c` или `--check`
 
 ### Необязательные
 
@@ -34,7 +34,7 @@ python3 main.py -f https://github.com/owner/repo/blob/master/src/file.c -d https
 
 Воспроизвести результат можно с помощью команды:
 ```
-python3 main.py -f ./examples/c/search.c -d ./examples/c/collection -l 10
+python3 main.py -c ./examples/c/search.c -d ./examples/c/collection -l 10
 ```
 
 Исходный файл:

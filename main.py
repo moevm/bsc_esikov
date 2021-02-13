@@ -10,13 +10,20 @@ from src.src_file import SrcFile
 from src.network.github_api import GithubAPI
 from src.network.url_parser import UrlParser
 from src.network.code_searcher import CodeSearcher
+from src.console.path_parser import PathParser
 
 
-def get_search_file():
-    if UrlParser.is_url(SEARCH_FILE_PATH):
-        return GITHUB_API.get_file_from_url(SEARCH_FILE_PATH)
-    else:
-        return DirScanner.read_file(SEARCH_FILE_PATH)
+def get_files_from_check_path(search_path):
+    if PathParser.is_file(search_path):
+        if UrlParser.is_url(search_path):
+            yield GITHUB_API.get_file_from_url(search_path)
+        else:
+            yield DirScanner.read_file(search_path)
+    else:  # if search_path is dir
+        if UrlParser.is_url(search_path):
+            yield from GITHUB_API.get_files_from_dir_url(search_path)
+        else:
+            yield from SCANNER.scan(search_path)
 
 
 def scan_dir(comparable_file):
@@ -77,10 +84,11 @@ if __name__ == "__main__":
     else:
         print("Не указан язык программирования")
         sys.exit(-1)
-    SEARCH_FILE_PATH = parameters.file
-    if not SrcFile.is_file_have_this_extension(SEARCH_FILE_PATH, FILE_EXTENSION):
-        print('Приложение поддерживает только файлы с расширением .c')
-        sys.exit(-1)
+    CHECK_PATH = parameters.check
+    if PathParser.is_file(CHECK_PATH):
+        if not SrcFile.is_file_have_this_extension(CHECK_PATH, FILE_EXTENSION):
+            print('Приложение поддерживает только файлы с расширением .c')
+            sys.exit(-1)
     SEARCH_DIR = parameters.data
     try:
         LIMIT = int(parameters.limit)
@@ -90,12 +98,13 @@ if __name__ == "__main__":
     GITHUB_API = GithubAPI(settings['GITHUB_TOKEN'], FILE_EXTENSION)
     SCANNER = DirScanner(FILE_EXTENSION)
 
-    search_file = get_search_file()
-    search_file.tokens = TOKENIZER.tokenize(search_file.src)
-    HESKEL_ALGO = Heskel(search_file.tokens_str)
-    GREEDY_ALGO = GreedyStringTiling(search_file.tokens_str)
+    for file in get_files_from_check_path(CHECK_PATH):
+        file.tokens = TOKENIZER.tokenize(file.src)
+        HESKEL_ALGO = Heskel(file.tokens_str)
+        GREEDY_ALGO = GreedyStringTiling(file.tokens_str)
 
-    similarity = []
-    for sim in get_similarity(search_file):
-        similarity.append(sim)
-    print_similarity_list(similarity)
+        similarity = []
+        for sim in get_similarity(file):
+            similarity.append(sim)
+        print_similarity_list(similarity)
+        print("\n\n")

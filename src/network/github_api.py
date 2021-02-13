@@ -85,7 +85,7 @@ class GithubAPI:
 
     def get_file_from_url(self, file_url):
         try:
-            owner_login, repo_name, branch_name, path = UrlParser.parse_github_file_path(file_url)
+            owner_login, repo_name, branch_name, path = UrlParser.parse_github_content_path(file_url)
         except ValueError as e:
             print(str(e))
             sys.exit(-1)
@@ -98,3 +98,23 @@ class GithubAPI:
         file = self.get_src_file_from_sha(owner_login, repo_name, response_json['sha'], "./" + path)
 
         return file
+
+    def get_files_from_dir_url(self, file_url):
+        try:
+            owner_login, repo_name, branch_name, path = UrlParser.parse_github_content_path(file_url)
+        except ValueError as e:
+            print(str(e))
+            sys.exit(-1)
+
+        api_url = '/repos/{owner}/{repo}/contents/{path}'.format(owner=owner_login, repo=repo_name, path=path)
+        params = {
+            'ref': branch_name
+        }
+        response_json = self.__send_get_request(api_url, params=params).json()
+
+        for node in response_json:
+            current_path = "./" + node["path"]
+            if node["type"] == "dir":
+                yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, node['sha'], current_path)
+            if node["type"] == "file" and SrcFile.is_file_have_this_extension(current_path, self.__file_extension):
+                yield self.get_src_file_from_sha(owner_login, repo_name, node["sha"], current_path)
