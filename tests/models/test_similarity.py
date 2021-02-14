@@ -1,6 +1,6 @@
 import unittest
-from src.similarity import Similarity
-from src.src_file import SrcFile
+from src.models.similarity import Similarity
+from src.models.src_file import SrcFile
 from src.tokenizers.c_tokenizer import CTokenizer
 
 

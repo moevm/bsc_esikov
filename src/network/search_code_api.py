@@ -1,6 +1,6 @@
 import requests
 import sys
-from src.src_file import SrcFile
+from src.models.src_file import SrcFile
 from src.network.search_api import SearchAPI
 
 

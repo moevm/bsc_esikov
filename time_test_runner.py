@@ -3,7 +3,7 @@ from src.tokenizers.c_tokenizer import CTokenizer
 from src.console.dir_scanner import DirScanner
 from src.algorithms.heskel import Heskel
 from src.algorithms.greedy_string_tiling import GreedyStringTiling
-from src.token import Token
+from src.models.token import Token
 
 
 def test_c_file(path_file, count_string):

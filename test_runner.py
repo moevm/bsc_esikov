@@ -2,8 +2,8 @@ import unittest
 import tests.tokenizers.test_c_tokenizer as test_c_tokenizer
 import tests.algorithms.test_heskel as test_heskel
 import tests.algorithms.test_greedy_string_tiling as test_greedy_string_tiling
-import tests.test_token as test_token
-import tests.test_similarity as test_similarity
+import tests.models.test_token as test_token
+import tests.models.test_similarity as test_similarity
 import tests.network.test_url_parser as test_url_parser
 
 

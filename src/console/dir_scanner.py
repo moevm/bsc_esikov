@@ -1,6 +1,6 @@
 import os
 import sys
-from src.src_file import SrcFile
+from src.models.src_file import SrcFile
 
 
 class DirScanner:

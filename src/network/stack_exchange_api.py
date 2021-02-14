@@ -2,7 +2,7 @@ import requests
 import sys
 from bs4 import BeautifulSoup
 from src.network.search_api import SearchAPI
-from src.src_file import SrcFile
+from src.models.src_file import SrcFile
 
 
 class StackExchangeAPI(SearchAPI):

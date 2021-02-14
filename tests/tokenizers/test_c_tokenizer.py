@@ -1,7 +1,7 @@
 import unittest
 from operator import attrgetter
 from src.tokenizers.c_tokenizer import CTokenizer
-from src.token import Token
+from src.models.token import Token
 
 
 class TestCTokenizer(unittest.TestCase):

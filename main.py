@@ -1,12 +1,12 @@
 import sys
 from settings import settings
-from src import argv_parser
+from src.console import argv_parser
 from src.tokenizers.c_tokenizer import CTokenizer
 from src.console.dir_scanner import DirScanner
 from src.algorithms.heskel import Heskel
 from src.algorithms.greedy_string_tiling import GreedyStringTiling
-from src.similarity import Similarity
-from src.src_file import SrcFile
+from src.models.similarity import Similarity
+from src.models.src_file import SrcFile
 from src.network.github_api import GithubAPI
 from src.network.url_parser import UrlParser
 from src.network.code_searcher import CodeSearcher

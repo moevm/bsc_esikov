@@ -2,9 +2,9 @@ import requests
 import base64
 import os
 import sys
-from src.src_file import SrcFile
+from src.models.src_file import SrcFile
 from src.network.url_parser import UrlParser
-from src.argv_parser import SEARCH_ALL_BRANCHES
+from src.console.argv_parser import SEARCH_ALL_BRANCHES
 
 
 class GithubAPI:

@@ -1,7 +1,7 @@
 import re
 from operator import attrgetter
 from src.tokenizers.tokenizer import Tokenizer
-from src.token import Token
+from src.models.token import Token
 
 
 class CTokenizer(Tokenizer):
