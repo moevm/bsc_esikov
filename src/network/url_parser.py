@@ -27,13 +27,13 @@ class UrlParser:
             # [4] - repo name
             return substrings_url[3], substrings_url[4]
         else:
-            raise ValueError('Url к github репозиторию не содержит "github.com"')
+            raise ValueError('Url to github repo does not contain "github.com"')
 
     @staticmethod
     def parse_github_content_path(github_content_path):
         substrings_url = github_content_path.split('/')
         if substrings_url[2] != 'github.com':
-            raise ValueError('Url к github репозиторию не содержит "github.com"')
+            raise ValueError('Url to github repo does not contain "github.com"')
         path = ""
         # [7] - begin content path in repo
         for i in range(7, len(substrings_url)):
@@ -46,4 +46,4 @@ class UrlParser:
             # [6] - branch name
             return substrings_url[3], substrings_url[4], substrings_url[6], path
         else:
-            raise ValueError('Переданный url не является путём до содержимого github репозитория')
+            raise ValueError('Entered url is not a path to the contents of the github repo')

@@ -34,10 +34,7 @@ class GithubSearchAPI(SearchAPI):
         except requests.exceptions.Timeout as e:
             print(str(e).split("'")[-2])
             sys.exit(-1)
-        except requests.exceptions.ConnectionError as e:
-            print(str(e))
-            sys.exit(-1)
-        except requests.exceptions.HTTPError as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
             print(str(e))
             sys.exit(-1)
         return response

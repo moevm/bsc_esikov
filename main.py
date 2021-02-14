@@ -53,24 +53,24 @@ def get_similarity(comparable_file):
 def print_similarity_list(similarity_list):
     for sim in similarity_list:
         check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
-        print("*" * 60)
+        print("*" * 100)
 
         print(sim.check_file_source + " " + sim.check_file_path + ":")
-        print("-" * 60)
+        print("-" * 100)
         for src in check_file_similarity_src:
             print(src)
-            print("-" * 60)
+            print("-" * 100)
 
         source = sim.detected_file_source + " " + sim.detected_file_path
-        print(source + "  --  " + str(round(sim.similarity_percentage)) + "% сходства:")
-        print("-" * 60)
+        print(source + "  --  " + str(round(sim.similarity_percentage)) + "% similarity:")
+        print("-" * 100)
 
         for src in detected_file_similarity_src:
             print(src)
-            print("-" * 60)
+            print("-" * 100)
         print("\n")
     if len(similarity_list) == 0:
-        print("Не было обнаружено файлов с процентом совпадения > " + str(LIMIT))
+        print("No files were found with a match percentage > " + str(LIMIT))
 
 
 if __name__ == "__main__":
@@ -80,18 +80,18 @@ if __name__ == "__main__":
     if FILE_EXTENSION == "c":
         TOKENIZER = CTokenizer()
     else:
-        print("Не указан язык программирования")
+        print("No programming language specified")
         sys.exit(-1)
     CHECK_PATH = parameters.check
     if PathParser.is_file(CHECK_PATH):
         if not SrcFile.is_file_have_this_extension(CHECK_PATH, FILE_EXTENSION):
-            print('Приложение поддерживает только файлы с расширением .c')
+            print('The app only supports .c files')
             sys.exit(-1)
     SEARCH_PATH = parameters.data
     try:
         LIMIT = int(parameters.limit)
     except ValueError as e:
-        print("Введённое предельное значение не является числом: " + parameters.limit)
+        print("The entered limit is not a number: " + parameters.limit)
         sys.exit(-1)
     BRANCH_POLICY = parameters.branches
     GITHUB_API = GithubAPI(settings['GITHUB_TOKEN'], FILE_EXTENSION)

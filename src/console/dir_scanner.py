@@ -18,12 +18,10 @@ class DirScanner:
                             with open(entry.path, 'r', encoding="utf-8") as src_file:
                                 yield SrcFile(entry.name, entry.path, src_file.read())
                         except UnicodeDecodeError as e:
-                            print("Файл " + entry.path + " не удалось прочитать - не в кодировке utf-8")
-        except FileNotFoundError as e:
-            print("Введённая директория не найдена: " + path)
-            sys.exit(-1)
-        except OSError as e:
-            print("Синтаксическая ошибка в пути до директории: " + path)
+                            print(e)
+                            print("File " + entry.path + " could not be read - not encoded utf-8")
+        except (FileNotFoundError, OSError) as e:
+            print(e)
             sys.exit(-1)
 
     @staticmethod
@@ -31,12 +29,10 @@ class DirScanner:
         try:
             with open(path, "r", encoding="utf-8") as src_file:
                 return SrcFile(path, path, src_file.read())
-        except FileNotFoundError as e:
-            print("Введённый файл не найден: " + path)
+        except (FileNotFoundError, OSError) as e:
+            print(e)
             sys.exit(-1)
         except UnicodeDecodeError as e:
-            print("Файл " + path + " не удалось прочитать - не в кодировке utf-8")
-            sys.exit(-1)
-        except OSError as e:
-            print("Введённый параметр не является файлом: " + path)
+            print(e)
+            print("File " + path + " could not be read - not encoded utf-8")
             sys.exit(-1)

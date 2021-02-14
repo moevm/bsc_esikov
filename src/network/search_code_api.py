@@ -58,16 +58,13 @@ class SearchCodeAPI(SearchAPI):
         try:
             response = requests.get(url, timeout=7)
             if response.status_code == 429:
-                print('Лимит запросов на searchcode.com исчерпан. Попробуйте позже')
+                print('Request limit on searchcode.com reached. Try later')
                 sys.exit(-1)
             response.raise_for_status()
         except requests.exceptions.Timeout as e:
             print(str(e).split("'")[-2])
             sys.exit(-1)
-        except requests.exceptions.ConnectionError as e:
-            print(str(e))
-            sys.exit(-1)
-        except requests.exceptions.HTTPError as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
             print(str(e))
             sys.exit(-1)
         return response

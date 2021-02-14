@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 
 if not os.path.exists(dotenv_path):
-    print("Файл .env не существует в корневой директории")
+    print("File .env does not exist in the root directory")
     sys.exit(-1)
 
 load_dotenv(dotenv_path)
@@ -15,5 +15,5 @@ try:
         'GITHUB_TOKEN': os.environ['GITHUB_TOKEN'],
     }
 except KeyError as e:
-    print("Файл .env не содержит переменную окружения " + str(e)[1:-1])
+    print("File .env does not contain an environment variable " + str(e)[1:-1])
     sys.exit(-1)
