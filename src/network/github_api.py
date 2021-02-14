@@ -4,6 +4,7 @@ import os
 import sys
 from src.src_file import SrcFile
 from src.network.url_parser import UrlParser
+from src.argv_parser import SEARCH_ALL_BRANCHES
 
 
 class GithubAPI:
@@ -43,7 +44,7 @@ class GithubAPI:
         response_json = self.__send_get_request(api_url).json()
         return response_json['default_branch']
 
-    def get_sha_last_commit_in_default_branch(self, owner_login, repo_name, branch_name):
+    def get_sha_last_branch_commit(self, owner_login, repo_name, branch_name):
         api_url = '/repos/{owner}/{repo}/branches/{branch}'.format(owner=owner_login, repo=repo_name, branch=branch_name)
         response_json = self.__send_get_request(api_url).json()
         return response_json['commit']['sha']
@@ -70,18 +71,42 @@ class GithubAPI:
             if node["type"] == "blob" and SrcFile.is_file_have_this_extension(current_path, self.__file_extension):
                 yield self.get_src_file_from_sha(owner_login, repo_name, node["sha"], current_path)
 
-    def get_files_generator_from_repo_url(self, repo_url):
+    def get_list_repo_branches(self, owner_login, repo_name, per_page=30):
+        branches = []
+        page = 1
+        while True:
+            api_url = '/repos/{owner}/{repo}/branches'.format(owner=owner_login, repo=repo_name)
+            params = {
+                "per_page": per_page,
+                "page": page
+            }
+            response_json = self.__send_get_request(api_url, params=params).json()
+
+            if len(response_json) == 0:
+                break
+
+            for node in response_json:
+                branches.append(node["name"])
+            page += 1
+
+        return branches
+
+    def get_files_generator_from_repo_url(self, repo_url, branch_policy):
         try:
             owner_login, repo_name = UrlParser.parse_github_repo(repo_url)
         except ValueError as e:
             print(str(e))
             sys.exit(-1)
 
-        default_branch_name = self.get_name_default_branch(owner_login, repo_name)
-        sha_last_commit = self.get_sha_last_commit_in_default_branch(owner_login, repo_name, default_branch_name)
-        files_generator = self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
+        branches = []
+        if branch_policy == SEARCH_ALL_BRANCHES:
+            branches = self.get_list_repo_branches(owner_login, repo_name)
+        else:
+            branches.append(self.get_name_default_branch(owner_login, repo_name))
 
-        return files_generator
+        for branch in branches:
+            sha_last_commit = self.get_sha_last_branch_commit(owner_login, repo_name, branch)
+            yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
 
     def get_file_from_url(self, file_url):
         try:

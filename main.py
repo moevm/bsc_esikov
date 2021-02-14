@@ -13,7 +13,7 @@ from src.network.code_searcher import CodeSearcher
 from src.console.path_parser import PathParser
 
 
-def get_files_from_check_path(search_path):
+def get_files_from_path(search_path):
     if PathParser.is_file(search_path):
         if UrlParser.is_url(search_path):
             yield GITHUB_API.get_file_from_url(search_path)
@@ -21,20 +21,20 @@ def get_files_from_check_path(search_path):
             yield DirScanner.read_file(search_path)
     else:  # if search_path is dir
         if UrlParser.is_url(search_path):
-            yield from GITHUB_API.get_files_from_dir_url(search_path)
+            if UrlParser.is_github_repo_url(search_path):
+                yield from GITHUB_API.get_files_generator_from_repo_url(search_path, BRANCH_POLICY)
+            else:
+                yield from GITHUB_API.get_files_from_dir_url(search_path)
         else:
             yield from SCANNER.scan(search_path)
 
 
 def scan_dir(comparable_file):
-    if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
+    if SEARCH_PATH == argv_parser.SEARCH_ALL_REPOS:
         func_names = TOKENIZER.get_function_names(comparable_file.src)
         dir_scan_generator = CodeSearcher.search_per_function_names(func_names, FILE_EXTENSION, settings['GITHUB_TOKEN'])
     else:
-        if UrlParser.is_url(SEARCH_DIR):
-            dir_scan_generator = GITHUB_API.get_files_generator_from_repo_url(SEARCH_DIR)
-        else:
-            dir_scan_generator = SCANNER.scan(SEARCH_DIR)
+        dir_scan_generator = get_files_from_path(SEARCH_PATH)
 
     for file in dir_scan_generator:
         file.tokens = TOKENIZER.tokenize(file.src)
@@ -60,7 +60,7 @@ def print_similarity_list(similarity_list):
             print(src)
             print("-" * 60)
 
-        if SEARCH_DIR == argv_parser.SEARCH_ALL_REPOS:
+        if SEARCH_PATH == argv_parser.SEARCH_ALL_REPOS:
             source = sim.source_similarity + " " + sim.detected_file_path
         else:
             source = sim.detected_file_path
@@ -89,16 +89,17 @@ if __name__ == "__main__":
         if not SrcFile.is_file_have_this_extension(CHECK_PATH, FILE_EXTENSION):
             print('Приложение поддерживает только файлы с расширением .c')
             sys.exit(-1)
-    SEARCH_DIR = parameters.data
+    SEARCH_PATH = parameters.data
     try:
         LIMIT = int(parameters.limit)
     except ValueError as e:
         print("Введённое предельное значение не является числом: " + parameters.limit)
         sys.exit(-1)
+    BRANCH_POLICY = parameters.branches
     GITHUB_API = GithubAPI(settings['GITHUB_TOKEN'], FILE_EXTENSION)
     SCANNER = DirScanner(FILE_EXTENSION)
 
-    for file in get_files_from_check_path(CHECK_PATH):
+    for file in get_files_from_path(CHECK_PATH):
         file.tokens = TOKENIZER.tokenize(file.src)
         HESKEL_ALGO = Heskel(file.tokens_str)
         GREEDY_ALGO = GreedyStringTiling(file.tokens_str)
