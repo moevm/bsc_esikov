@@ -4,7 +4,7 @@
 
 Переименовать файл `.env.example` в `.env` и внести в него свои данные, согласно представленному шаблону.
 
-Для запуска необходимо в качестве параметра передать путь до проверяемого файла ```.c``` или до проверяемой директории:
+Для запуска необходимо в качестве параметра передать путь до проверяемого объекта:
 ```
 python3 main.py -c ../program.c
 ```
@@ -14,7 +14,7 @@ python3 main.py -c ../program.c
 python3 main.py -c ../program.c -d ../search_dir
 ```
 
-Один или оба параметра могут быть url к github файлам и репозиториям:
+Один или оба параметра могут быть url к github файлам, директориям или репозиториям:
 ```
 python3 main.py -c https://github.com/owner/repo/blob/master/src/file.c -d https://github.com/owner/repo
 ```
@@ -23,128 +23,13 @@ python3 main.py -c https://github.com/owner/repo/blob/master/src/file.c -d https
 
 ### Обязательные
 
-* Путь до проверяемого файла в файловой системе или на github: `-c` или `--check`
+* Путь до проверяемого объекта в файловой системе или на github: `-c` или `--check`
 
 ### Необязательные
 
-* Путь до директории или репозитория, где осуществляется поиск: `-d` или `--data`. По умолчанию поиск осуществляется в репозиториях по названиям функций в файле с помощью [search code](https://searchcode.com/).
+* Путь до файла, директории или репозитория, где осуществляется поиск: `-d` или `--data`. По умолчанию поиск осуществляется в репозиториях и на [stackoverflow](https://stackoverflow.com/) по названиям функций в файле с помощью [search code](https://searchcode.com/), [github search](https://docs.github.com/en/rest/reference/search#search-code), [stack exchange](https://api.stackexchange.com/docs/advanced-search).
 * Предельное значение допустимого сходства программ в процентах — при его превышении программа будет считаться заимствованной: `-l` или `--limit`. По умолчанию — 60%.
-
-## Пример работы
-
-Воспроизвести результат можно с помощью команды:
-```
-python3 main.py -c ./examples/c/search.c -d ./examples/c/collection -l 10
-```
-
-Исходный файл:
-```
-#include <stdio.h>
-#include "search.h"
-
-int updateCriticalNumber(int value)
-{
-    if (value == 0)
-    {
-        return value + 64;
-    }
-    if (value == -10)
-    {
-        return 10;
-    }
-    if (value == 10)
-    {
-        return func(value);
-    }
-}
-```
-
-### Результат
-
-#### rename.c:
-
-Сходство 100%.
-
-Схожие фрагменты:
-```
-int changeValue(int number)
-{
-    if (number == 0) {
-        return number + 64;
-    }
-    if (number == -10) {
-        return 10;
-    }
-    if (number == 10) {
-        return func(number);
-    }
-}
-```
-
-#### switch.c:
-
-Сходство 100%.
-
-Схожие фрагменты:
-```
-int updateCriticalNumber(int value)
-{
-    switch (value)
-    {
-        case 0:
-        {
-            return value + 64;
-            break;
-        }
-        case -10:
-        {
-            return 10;
-            break;
-        }
-        case 10:
-        {
-            return func(value);
-            break;
-        }
-    }
-}
-```
-
-#### max_change.c:
-
-Сходство 80%.
-
-Схожие фрагменты:
-```
-long myFunc(long x)
-{
-    //double value = 0.456;
-    // if
-    if (x == 0)
-    {
-        return x + 64;
-                                }
-    if (x == -10)
-
-                            return 10;
-        if (x == 10)
-                    {
-            // return
-            return func(x);
-            }
-```
-
-#### other_func.c:
-
-Сходство 43%.
-
-Схожие фрагменты:
-```
-if (a > b)
-        return a;
-    else
-        return 
-```
+* Осуществлять ли поиск только на главной ветке репозитория или на всех ветках `-b` или `--branches`. 1 — поиск по всем веткам, 0 — только на главной. По умолчанию — 0. Имеет воздействие, если только один из параметров является url к github-репозиторию.
 
 ## Тестирование
 
@@ -157,3 +42,7 @@ python3 -m unittest tests/test_tokenizer.py
 ```
 python3 test_runner.py
 ```
+
+Для выполнения тестов на скорость работы используется скрипт:
+```
+python3 time_test_runner.py

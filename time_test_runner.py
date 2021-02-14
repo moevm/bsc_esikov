@@ -53,8 +53,8 @@ if __name__ == '__main__':
 
     test_c_file('./examples/c/100string.c', 100)
     test_c_file('./examples/c/1000string.c', 1000)
-    #test_c_file('./examples/c/10000string.c', 10000)
-    big_file = DirScanner.read_file('./examples/c/10000string.c')
-    start_time = time.time()
-    big_file.tokens = TOKENIZER.tokenize(big_file.src)
-    print("Токенизация файла из 10000 строк: %s секунд" % (time.time() - start_time))
+    test_c_file('./examples/c/10000string.c', 10000)
+    # big_file = DirScanner.read_file('./examples/c/10000string.c')
+    # start_time = time.time()
+    # big_file.tokens = TOKENIZER.tokenize(big_file.src)
+    # print("Токенизация файла из 10000 строк: %s секунд" % (time.time() - start_time))
