@@ -54,16 +54,14 @@ def print_similarity_list(similarity_list):
     for sim in similarity_list:
         check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
         print("*" * 60)
-        print(sim.check_file_path + ":")
+
+        print(sim.check_file_source + " " + sim.check_file_path + ":")
         print("-" * 60)
         for src in check_file_similarity_src:
             print(src)
             print("-" * 60)
 
-        if SEARCH_PATH == argv_parser.SEARCH_ALL_REPOS:
-            source = sim.source_similarity + " " + sim.detected_file_path
-        else:
-            source = sim.detected_file_path
+        source = sim.detected_file_source + " " + sim.detected_file_path
         print(source + "  --  " + str(round(sim.similarity_percentage)) + "% сходства:")
         print("-" * 60)
 
@@ -105,7 +103,11 @@ if __name__ == "__main__":
         GREEDY_ALGO = GreedyStringTiling(file.tokens_str)
 
         similarity = []
+        similarity_paths = []
         for sim in get_similarity(file):
+            if sim.detected_file_path in similarity_paths:
+                continue
             similarity.append(sim)
+            similarity_paths.append(sim.detected_file_path)
         print_similarity_list(similarity)
         print("\n\n")

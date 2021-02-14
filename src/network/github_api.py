@@ -49,29 +49,36 @@ class GithubAPI:
         response_json = self.__send_get_request(api_url).json()
         return response_json['commit']['sha']
 
-    def get_src_file_from_sha(self, owner_login, repo_name, sha, file_path):
+    def get_src_file_from_sha(self, owner_login, repo_name, sha, file_path, branch=None, source=None):
         api_url = '/repos/{owner}/{repo}/git/blobs/{sha}'.format(owner=owner_login, repo=repo_name, sha=sha)
         response_json = self.__send_get_request(api_url).json()
         if response_json['encoding'] == 'base64':
             file_bytes = base64.b64decode(response_json['content'])
             src = file_bytes.decode('utf-8')
-            return SrcFile(os.path.basename(file_path), file_path, src)
+            file = SrcFile(os.path.basename(file_path), file_path, src)
+            if source is None:
+                file.source = 'https://github.com/{owner}/{repo}'.format(owner=owner_login, repo=repo_name)
+                if branch is not None:
+                    file.source = file.source + "/tree/" + branch
+            else:
+                file.source = source
+            return file
         else:
             print("В репозитории " + repo_name + " файл " + file_path + "закодирован не в формате base 64. " +
                   "Невозможно выполнить его декодирование")
 
-    def get_files_generator_from_sha_commit(self, owner_login, repo_name, sha, file_path='.'):
+    def get_files_generator_from_sha_commit(self, owner_login, repo_name, sha, file_path='.', branch=None, source=None):
         api_url = '/repos/{owner}/{repo}/git/trees/{sha}'.format(owner=owner_login, repo=repo_name, sha=sha)
         response_json = self.__send_get_request(api_url).json()
         tree = response_json['tree']
         for node in tree:
             current_path = file_path + "/" + node["path"]
             if node["type"] == "tree":
-                yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, node['sha'], current_path)
+                yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, node['sha'], file_path=current_path, branch=branch, source=source)
             if node["type"] == "blob" and SrcFile.is_file_have_this_extension(current_path, self.__file_extension):
-                yield self.get_src_file_from_sha(owner_login, repo_name, node["sha"], current_path)
+                yield self.get_src_file_from_sha(owner_login, repo_name, node["sha"], file_path=current_path, branch=branch, source=source)
 
-    def get_list_repo_branches(self, owner_login, repo_name, per_page=30):
+    def get_list_repo_branches(self, owner_login, repo_name, default_branch=None, per_page=30):
         branches = []
         page = 1
         while True:
@@ -86,7 +93,9 @@ class GithubAPI:
                 break
 
             for node in response_json:
-                branches.append(node["name"])
+                branch_name = node["name"]
+                if branch_name != default_branch:
+                    branches.append(branch_name)
             page += 1
 
         return branches
@@ -98,15 +107,18 @@ class GithubAPI:
             print(str(e))
             sys.exit(-1)
 
-        branches = []
+        # first check - main branch
+        default_branch = self.get_name_default_branch(owner_login, repo_name)
+        branches = [default_branch]
         if branch_policy == SEARCH_ALL_BRANCHES:
-            branches = self.get_list_repo_branches(owner_login, repo_name)
-        else:
-            branches.append(self.get_name_default_branch(owner_login, repo_name))
+            branches += self.get_list_repo_branches(owner_login, repo_name, default_branch=default_branch)
 
         for branch in branches:
             sha_last_commit = self.get_sha_last_branch_commit(owner_login, repo_name, branch)
-            yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
+            if branch == default_branch:
+                yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit)
+            else:
+                yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, sha_last_commit, branch=branch)
 
     def get_file_from_url(self, file_url):
         try:
@@ -120,13 +132,14 @@ class GithubAPI:
             'ref': branch_name
         }
         response_json = self.__send_get_request(api_url, params=params).json()
-        file = self.get_src_file_from_sha(owner_login, repo_name, response_json['sha'], "./" + path)
+        file = self.get_src_file_from_sha(owner_login, repo_name, response_json['sha'], file_path='', source=file_url)
+        file.source = file_url
 
         return file
 
-    def get_files_from_dir_url(self, file_url):
+    def get_files_from_dir_url(self, dir_url):
         try:
-            owner_login, repo_name, branch_name, path = UrlParser.parse_github_content_path(file_url)
+            owner_login, repo_name, branch_name, path = UrlParser.parse_github_content_path(dir_url)
         except ValueError as e:
             print(str(e))
             sys.exit(-1)
@@ -138,8 +151,8 @@ class GithubAPI:
         response_json = self.__send_get_request(api_url, params=params).json()
 
         for node in response_json:
-            current_path = "./" + node["path"]
+            current_path = "./" + node["name"]
             if node["type"] == "dir":
-                yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, node['sha'], current_path)
-            if node["type"] == "file" and SrcFile.is_file_have_this_extension(current_path, self.__file_extension):
-                yield self.get_src_file_from_sha(owner_login, repo_name, node["sha"], current_path)
+                yield from self.get_files_generator_from_sha_commit(owner_login, repo_name, node['sha'], file_path=current_path, source=dir_url)
+            if node["type"] == "file" and SrcFile.is_file_have_this_extension(node["name"], self.__file_extension):
+                yield self.get_src_file_from_sha(owner_login, repo_name, node["sha"], file_path=current_path, source=dir_url)

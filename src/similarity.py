@@ -28,7 +28,11 @@ class Similarity:
         return self.__detected_file.path
 
     @property
-    def source_similarity(self):
+    def check_file_source(self):
+        return self.__check_file.source
+
+    @property
+    def detected_file_source(self):
         return self.__detected_file.source
 
     @property
