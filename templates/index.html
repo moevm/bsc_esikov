@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <div class="w3-container" style="width: 50%; margin: 0 auto;">
+        <div class="w3-center">
+            <h1 style="font-weight: bold;">Search similarity source code</h1>
+        </div>
+        <div class="w3-container" style="width: 85%; margin: 0 auto;">
+            <form action="{{ url_for('search') }}" method="POST">
+                <div>
+                    <div class="w3-border-bottom">
+                        <h3><i>Required</i></h3>
+                    </div>
+                    <div class="w3-section">
+                        <label>
+                            Check path:
+                            <input class="w3-input w3-hover-light-grey w3-border w3-round" type="text" name="check" required
+                                   placeholder="https://github.com/torvalds/linux/blob/master/kernel/dma.c"/>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <div class="w3-border-bottom">
+                        <h3><i>Optional</i></h3>
+                    </div>
+                    <div class="w3-section">
+                        <label>
+                            Search path:
+                            <input class="w3-input w3-hover-light-grey w3-border w3-round" type="text" name="data"
+                                   placeholder="https://github.com/microsoft/TypeScript/tree/master/src/server"/>
+                        </label>
+                    </div>
+                    <div class="w3-section">
+                        <label>
+                            Limit:
+                            <input class="w3-input w3-hover-light-grey w3-border w3-round" type="number"
+                                   min="0" max="100" step="1" value="60" name="limit" placeholder="80" required/>
+                        </label>
+                    </div>
+                    <div class="w3-section">
+                        <div>
+                            <label >Branches to search:</label>
+                        </div>
+                        <label>
+                            <input class="w3-radio" type="radio" name="branches" value="0" checked required/>
+                            &nbsp;Main branch
+                        </label>
+                        <label style="margin-left: 30px;">
+                            <input class="w3-radio" type="radio" name="branches" value="1"/>
+                            &nbsp;All branches
+                        </label>
+                    </div>
+                </div>
+                <div class="w3-section w3-right-align">
+                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

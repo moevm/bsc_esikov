@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <div class="w3-container w3-border" style="width: 90%; max-width: 1320px; margin: 0 auto;">
+        <div class="w3-center">
+            <h1 style="font-weight: bold;">Similarity code</h1>
+            <form action="{{ url_for('search') }}" method="GET">
+                <input style="display: none;" type="number" name="page" value="{{ request.args.get('page', page) }}" id="page">
+
+                {% if block_left_button %}
+                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
+                            style="width: 100px; margin-right: 50px;" disabled>
+                        <b>&lt;</b>
+                    </button>
+                {% else %}
+                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
+                        style="width: 100px; margin-right: 50px;" type="submit"
+                        onclick="let page = document.getElementById('page'); page.value = Number(page.value) - 1;">
+                        <b>&lt;</b>
+                    </button>
+                {% endif %}
+
+                {% if block_right_button %}
+                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
+                            style="width: 100px;" disabled>
+                        <b>&gt;</b>
+                    </button>
+                {% else %}
+                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
+                        style="width: 100px;" type="submit"
+                        onclick="let page = document.getElementById('page'); page.value = Number(page.value) + 1;">
+                        <b>&gt;</b>
+                    </button>
+                {% endif %}
+
+            </form>
+            <div class="w3-section">
+                <b><i><span class="w3-text-red">{{ percentage }}%</span>&nbsp;similarity</i></b>
+            </div>
+        </div>
+        <div class="w3-section w3-cell-row">
+            <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
+                <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
+                    <b>{{ check_file_source }}</b>
+                </div>
+            </div>
+            <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
+                <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
+                    <i>{{ detected_file_source }}</i>
+                </div>
+            </div>
+        </div>
+        <div class="w3-section w3-cell-row">
+            <div class="w3-cell" style="width: 50%; padding: 0 15px;">
+
+                {% for check_file_src in check_file_src_list %}
+
+                    <div>
+                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto;">{{ check_file_src }}</pre>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+            <div class="w3-cell" style="width: 50%; padding: 0 15px;">
+
+                {% for detected_file_src in detected_file_src_list %}
+
+                    <div>
+                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto;">{{ detected_file_src }}</pre>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
