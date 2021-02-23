@@ -1,0 +1,10 @@
+.idea
+**/__pycache__/
+**/*.py[cod]
+.git
+.gitignore
+.gitattributes
+docker-compose.yml
+Dockerfile
+.docker
+.dockerignore
