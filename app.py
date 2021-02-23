@@ -3,14 +3,19 @@ from flask import render_template
 from flask import request
 from searcher import Searcher
 
+# Dictionary of programming languages:
+# Name: src_file_extension
+languages = {
+    "C": "c",
+}
+
 app = Flask(__name__)
 searcher = None
 
 
 @app.route('/')
 def index():
-    name = 'Test'
-    return render_template('index.html', x=name)
+    return render_template('index.html', languages=languages)
 
 
 @app.route('/search', methods=['POST', 'GET'])
@@ -22,7 +27,7 @@ def search():
             search_path=request.form['data'],
             limit=request.form['limit'],
             branches=request.form['branches'],
-            file_extension="c"
+            file_extension=request.form['language']
         )
         print("start search")
         searcher.search_similarity()
