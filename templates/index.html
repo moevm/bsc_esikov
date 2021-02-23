@@ -2,7 +2,7 @@
 
 {% block content %}
 
-    <div class="w3-container" style="width: 50%; margin: 0 auto;">
+    <div class="w3-container" style="width: 65%; margin: 0 auto;">
         <div class="w3-center">
             <h1 style="font-weight: bold;">Search similarity source code</h1>
         </div>
@@ -12,7 +12,7 @@
                     <div class="w3-border-bottom">
                         <h3><i>Required</i></h3>
                     </div>
-                    <div class="w3-section">
+                    <div class="w3-section w3-container">
                         <label>
                             Check path:
                             <input class="w3-input w3-hover-light-grey w3-border w3-round" type="text" name="check" required
@@ -24,21 +24,21 @@
                     <div class="w3-border-bottom">
                         <h3><i>Optional</i></h3>
                     </div>
-                    <div class="w3-section">
+                    <div class="w3-section w3-container">
                         <label>
                             Search path:
                             <input class="w3-input w3-hover-light-grey w3-border w3-round" type="text" name="data"
                                    placeholder="https://github.com/microsoft/TypeScript/tree/master/src/server"/>
                         </label>
                     </div>
-                    <div class="w3-section">
+                    <div class="w3-section w3-container">
                         <label>
                             Limit:
                             <input class="w3-input w3-hover-light-grey w3-border w3-round" type="number"
                                    min="0" max="100" step="1" value="60" name="limit" placeholder="80" required/>
                         </label>
                     </div>
-                    <div class="w3-section">
+                    <div class="w3-section w3-container">
                         <div>
                             <label >Branches to search:</label>
                         </div>
@@ -52,8 +52,11 @@
                         </label>
                     </div>
                 </div>
-                <div class="w3-section w3-right-align">
-                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black" type="submit">Search</button>
+                <div class="w3-section w3-container w3-right-align">
+                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black" type="submit"
+                            style="width: 150px;">
+                        Search
+                    </button>
                 </div>
             </form>
         </div>
