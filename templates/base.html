@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <title>Search Similarity</title>
+</head>
+<body>
+    <nav>
+        <div class="w3-bar w3-large w3-dark-gray w3-card-4">
+            <a href="{{ url_for('index') }}" class="w3-bar-item w3-button">Search</a>
+            <div class="w3-dropdown-hover">
+                <button class="w3-button" style="cursor: default; outline: none;">
+                    Info <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="w3-dropdown-content w3-bar-block w3-light-grey">
+                    <a href="{{ url_for('index') }}" class="w3-bar-item w3-button">C</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div>
+        {% block content %}
+
+        {% endblock %}
+    </div>
+</body>
+</html>
