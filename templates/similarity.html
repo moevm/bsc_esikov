@@ -51,29 +51,23 @@
                 </div>
             </div>
         </div>
-        <div class="w3-section w3-cell-row">
-            <div class="w3-cell" style="width: 50%; padding: 0 15px;">
+        <div>
+            {% for similarity_fragment in similarity_list %}
 
-                {% for check_file_src in check_file_src_list %}
-
-                    <div>
-                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto;">{{ check_file_src }}</pre>
+            <div class="w3-section w3-cell-row">
+                <div class="w3-cell" style="width: 50%; padding: 0 15px;">
+                    <div style="min-width: 635px;">
+                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto; font-size: 14px;">{{ similarity_fragment[0] }}</pre>
                     </div>
-
-                {% endfor %}
-
-            </div>
-            <div class="w3-cell" style="width: 50%; padding: 0 15px;">
-
-                {% for detected_file_src in detected_file_src_list %}
-
-                    <div>
-                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto;">{{ detected_file_src }}</pre>
+                </div>
+                <div class="w3-cell" style="width: 50%; padding: 0 15px;">
+                    <div style="min-width: 635px;">
+                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto; font-size: 14px;">{{ similarity_fragment[1] }}</pre>
                     </div>
-
-                {% endfor %}
-
+                </div>
             </div>
+
+            {% endfor %}
         </div>
     </div>
 
