@@ -85,7 +85,7 @@ class CTokenizer(Tokenizer):
         tokens += CTokenizer.get_tokens_missing_curly_braces(src)
 
         # Токенизация циклов
-        cycle_tokens = CTokenizer.search_tokens(src, r'\b(for|while)\b\s*\([^{]+?\)\s*(?=[{\w])', "cycle")
+        cycle_tokens = CTokenizer.search_tokens(src, r'\b(for|while)\b\s*\([^{]+?\)\s*(?=[{\w*])', "cycle")
         src = CTokenizer.replace_tokens_in_src(src, cycle_tokens)
         tokens += cycle_tokens
         tokens += CTokenizer.search_tokens(src, r'\bdo\b', "cycle")
@@ -115,7 +115,7 @@ class CTokenizer(Tokenizer):
                 tokens.append(Token("}", match.start(5) - 1, match.start(5) - 1))
 
         # Токенизация условных конструкций
-        if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w.])|\belse\b', "if")
+        if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w*.])|\belse\b', "if")
         src = CTokenizer.replace_tokens_in_src(src, if_else_tokens)
         tokens += if_else_tokens
 
@@ -176,7 +176,7 @@ class CTokenizer(Tokenizer):
         # Токенизация математических выражений
         tokens += CTokenizer.search_tokens(src, r'\w+\+\+|\+\+\w+', "math")
         tokens += CTokenizer.search_tokens(src, r'\w+--|--\w+', "math")
-        tokens += CTokenizer.search_tokens(src, r'(?<![@={},(\s])\s*\*', "math")  # @ используется
+        tokens += CTokenizer.search_tokens(src, r'(?<=[\w\d)])\s*\*', "math")
         tokens += CTokenizer.search_tokens(src, r'(?<=@)\*', "math")  # @ используется
         tokens += CTokenizer.search_tokens(src, r'(?<![@={}><|&\s+-])\s*[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
         tokens += CTokenizer.search_tokens(src, r'(?<=@)[+\-/%]\s*(?![>\s+-])', "math")  # @ используется

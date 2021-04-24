@@ -59,6 +59,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("int value = *ptr;"), "NA")
         self.assertEqual(tokenizer("void* voidptr = pointer;"), "PA")
         self.assertEqual(tokenizer("int *pa = NULL;"), "PA")
+        self.assertEqual(tokenizer("*pa = NULL;"), "A")
         self.assertEqual(tokenizer("void* voidptr = longintegers;"), "PA")
         self.assertEqual(tokenizer("void (*message) (void);"), "P")
         self.assertEqual(tokenizer("uint16_t ( *func_name_4 )( uint8_t, int16_t);"), "P")
@@ -119,6 +120,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("int value = func(y) + x;"), "NAM")
         self.assertEqual(tokenizer("int value = x + y - 2;"), "NAMM")
         self.assertEqual(tokenizer("int value = (45 + 94) / 4;"), "NAMM")
+        self.assertEqual(tokenizer("int value = (45 * 94) * 4;"), "NAMM")
         self.assertEqual(tokenizer("return a * b;"), "RM")
         self.assertEqual(tokenizer("return func();"), "RC")
         self.assertEqual(tokenizer("return;"), "R")
@@ -197,6 +199,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("if(x < 10) int a;"), "I{N}")
         self.assertEqual(tokenizer("if(x < 10) int a = 10;"), "I{NA}")
         self.assertEqual(tokenizer("if(x < 10) if(x % 2 == 0) y += x;"), "I{I{AM}}")
+        self.assertEqual(tokenizer("if (a == ';' || a == '.') { i++; }"), "I{M}")
         self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x;"), "S{I{AM}}")
         self.assertEqual(tokenizer("while(x = func(x)) if(x % 2 == 0) y += x;"), "S{I{AM}}")
         self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x; else return 0;"), "S{I{AM}I{R}}")
@@ -230,6 +233,12 @@ class TestCTokenizer(unittest.TestCase):
         switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; }" \
                      "case -10: if (x > 80) return 10; default:  return func(value);}} "
         self.assertEqual(tokenizer(switch_str), "F{I{RM}I{I{R}}I{RC}}")
+        test_str = "if(*output==NULL)"\
+                       "*output = (char**) malloc(count*sizeof(char*));"\
+                   "else"\
+                       "*output = (char**) realloc (*output,count*sizeof(char*));"
+        self.assertEqual(tokenizer(test_str), "I{ATC}I{ATC}")
+        self.assertEqual(tokenizer("while(*output == NULL) *output = (char**) malloc(count * sizeof(char*));"), "S{ATC}")
 
     def assert_tokens_list(self, current, true):
         self.assertEqual(len(current), len(true))
