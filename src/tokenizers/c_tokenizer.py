@@ -66,9 +66,6 @@ class CTokenizer(Tokenizer):
         ternary_tokens, src = CTokenizer.get_tokens_ternary_operator(src)
         tokens += ternary_tokens
 
-        # Токенизация возврата из функции
-        tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
-
         # Токенизация указателей на функцию
         regex_for_func_ptr = r'\w+(\s*\*\s*)*\s*\((\s*\*\s*)+[\w+\[\]]+\s*\)\s*\([^=;]*\)\s*(?=[;=])'
         function_pointer_tokens = CTokenizer.search_tokens(src, regex_for_func_ptr, "ptr")
@@ -146,6 +143,10 @@ class CTokenizer(Tokenizer):
         regex_for_struct_var = r'(struct|union)\s+\w+\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'
         tokens += CTokenizer.search_tokens(src, regex_for_struct_var, "struct")
 
+        # Токенизация возврата из функции
+        tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
+        src = re.sub(r'\breturn\b', CTokenizer.NOT_TOKEN * 6, src)
+
         # Токенизация основных типов данных
         regex_for_ptr = r'({int_types}|{char_types}|{float_types}|void)(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d:]*(\s*,(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d]*\s*)*\s*(?=[;=])' \
                         .format(
@@ -178,7 +179,7 @@ class CTokenizer(Tokenizer):
         tokens += CTokenizer.search_tokens(src, r'\w+--|--\w+', "math")
         tokens += CTokenizer.search_tokens(src, r'(?<=[\w\d)])\s*\*', "math")
         tokens += CTokenizer.search_tokens(src, r'(?<=@)\*', "math")  # @ используется
-        tokens += CTokenizer.search_tokens(src, r'(?<![@={}><|&\s+-])\s*[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
+        tokens += CTokenizer.search_tokens(src, r'(?<![@={}><|&\s+-.])\s*[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
         tokens += CTokenizer.search_tokens(src, r'(?<=@)[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
 
         # Токенизация логических операций
