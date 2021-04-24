@@ -186,6 +186,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('do if (i > 10) break; while (i > 0);'), "S{I{G}}")
         self.assertEqual(tokenizer("while(x < 10) x += 1;"), "S{AM}")
         self.assertEqual(tokenizer('while((strstr(text, "Dragon flew away!") == NULL)) { foo(); }'), "S{C}")
+        self.assertEqual(tokenizer("while ((str[i]==' ')||(str[i]=='\t')||(str[i]=='\n')) getchar();"), "S{C}")
         self.assertEqual(tokenizer("for(int i = 0; i < 10; i++) compare(func(i), 0);"), "S{C}")
         self.assertEqual(tokenizer("if(x < 10) int a;"), "I{N}")
         self.assertEqual(tokenizer("if(x < 10) int a = 10;"), "I{NA}")

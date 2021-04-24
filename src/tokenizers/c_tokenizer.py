@@ -74,12 +74,12 @@ class CTokenizer(Tokenizer):
         tokens += CTokenizer.get_tokens_missing_curly_braces(src)
 
         # Токенизация циклов
-        tokens += CTokenizer.search_tokens(src, r'\bdo\b', "cycle")
-        while_from_do_tokens = CTokenizer.search_tokens(src, r'while\s*\([^;{]+\)\s*;', "cycle")
-        src = CTokenizer.replace_tokens_in_src(src, while_from_do_tokens)
         cycle_tokens = CTokenizer.search_tokens(src, r'\b(for|while)\b\s*\([^{]+?\)\s*(?=[{\w])', "cycle")
         src = CTokenizer.replace_tokens_in_src(src, cycle_tokens)
         tokens += cycle_tokens
+        tokens += CTokenizer.search_tokens(src, r'\bdo\b', "cycle")
+        while_from_do_tokens = CTokenizer.search_tokens(src, r'while\s*\([^;{]+\)\s*;', "cycle")
+        src = CTokenizer.replace_tokens_in_src(src, while_from_do_tokens)
 
         # Удаление закрывающей } в switch
         #   Специальный символ $ используется в дальнейшем при токенизации как окончание switch
