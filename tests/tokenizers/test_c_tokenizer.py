@@ -40,6 +40,11 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(CTokenizer.replace_strings("if ((p[i] == '.') || (p[i] == '?') || (p[i] == ';'))"), "if ((p[i] == " + CTokenizer.SUBSTITUTE * 3 + ") || (p[i] == " + CTokenizer.SUBSTITUTE * 3 + ") || (p[i] == " + CTokenizer.SUBSTITUTE * 3 + "))")
         self.assertEqual(CTokenizer.replace_strings('char* string = "abcdefgh"'), 'char* string = ' + CTokenizer.SUBSTITUTE * 10)
 
+    def test_replace_macros(self):
+        self.assertEqual(CTokenizer.replace_macros("#define N 22"), " " * 12)
+        self.assertEqual(CTokenizer.replace_macros("#   define    N   22  "), " " * 22)
+        self.assertEqual(CTokenizer.replace_macros("#include <stdio.h>\n#define N 22\nint a = 10;"), "#include <stdio.h>\n" + " " * 12 + "\nint a = 10;")
+
     def get_tokens_str_after_tokenize(self, src):
         tokens = self.tokenizer.tokenize(src)
         return Token.get_tokens_str_from_token_list(tokens)
@@ -256,6 +261,7 @@ class TestCTokenizer(unittest.TestCase):
                        "*output = (char**) realloc (*output,count*sizeof(char*));"
         self.assertEqual(tokenizer(test_str), "I{ATC}I{ATC}")
         self.assertEqual(tokenizer("while(*output == NULL) *output = (char**) malloc(count * sizeof(char*));"), "S{ATC}")
+        self.assertEqual(tokenizer('#include <stdio.h>\n#define print(a) printf("%d \n", a);\nint main(void){\nint x = 10;\nprint(x);\nreturn 0;\n}'), "F{NACR}")
 
     def assert_tokens_list(self, current, true):
         self.assertEqual(len(current), len(true))

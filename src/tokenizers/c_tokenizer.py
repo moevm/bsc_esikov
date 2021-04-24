@@ -45,7 +45,7 @@ class CTokenizer(Tokenizer):
 
     @staticmethod
     def replace_import(src):
-        import_tokens = CTokenizer.search_tokens(src, r'#include\s*[<"][^<>"]+[>"]', "control", re.DOTALL)
+        import_tokens = CTokenizer.search_tokens(src, r'#\s*include\s*[<"][^<>"]+[>"]', "control", re.DOTALL)
         src = CTokenizer.replace_tokens_in_src(src, import_tokens, " ")
         return src
 
@@ -56,11 +56,20 @@ class CTokenizer(Tokenizer):
         src = CTokenizer.replace_tokens_in_src(src, strings_tokens, CTokenizer.SUBSTITUTE)
         return src
 
+    @staticmethod
+    def replace_macros(src):
+        macros_tokens = CTokenizer.search_tokens(src, r"#\s*define\s*[^\n]*", "control")
+        src = CTokenizer.replace_tokens_in_src(src, macros_tokens, " ")
+        return src
+
     def _process(self, src):
         tokens = []
 
         # Замена символьных и строковых констант, например, чтобы ';' - не вносило ошибки в токенизацию
         src = CTokenizer.replace_strings(src)
+
+        # Замена директив #define
+        src = CTokenizer.replace_macros(src)
 
         # Токенизация тернарного оператора
         ternary_tokens, src = CTokenizer.get_tokens_ternary_operator(src)
