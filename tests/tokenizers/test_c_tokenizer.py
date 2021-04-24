@@ -65,6 +65,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("double (*actions[] ) (int, int);"), "P")
         self.assertEqual(tokenizer("(int)x;"), "T")
         self.assertEqual(tokenizer("( int*  *) x;"), "T")
+        self.assertEqual(tokenizer("char* name = (char*)malloc(80*sizeof(char));"), "PATC")
         self.assertEqual(tokenizer("; func();"), "C")
         self.assertEqual(tokenizer(";func(x);"), "C")
         self.assertEqual(tokenizer("{ func (  x) ; "), "{C")

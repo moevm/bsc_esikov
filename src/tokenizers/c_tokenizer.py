@@ -13,7 +13,7 @@ class CTokenizer(Tokenizer):
     CHAR_TYPES = "|".join(["signed char", "unsigned char", "char"])
     FLOAT_TYPES = "|".join(["long double", "double", "float"])
     BORDER = "$"
-    NOT_TOKEN = "X"  # Используется при токенизации, не является конечным токеном
+    NOT_TOKEN = "."  # Используется при токенизации, не является конечным токеном
     TOKENS = {
         "int": "N",  # - Number - целое число
         "double": "D",  # - Double - дробное число
@@ -121,7 +121,7 @@ class CTokenizer(Tokenizer):
         tokens += call_tokens
 
         # Токенизация приведения типа
-        type_cast_tokens = CTokenizer.search_tokens(src, r'\(\s*\w+(\s*\*?\s*)*\)\s*[\w(]', "cast")
+        type_cast_tokens = CTokenizer.search_tokens(src, r'\(\s*\w+(\s*\*?\s*)*\)\s*(?=[\w\(' + CTokenizer.NOT_TOKEN + r'])', "cast")
         src = CTokenizer.replace_tokens_in_src(src, type_cast_tokens)
         tokens += type_cast_tokens
 
