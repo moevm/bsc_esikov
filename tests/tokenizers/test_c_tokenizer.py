@@ -75,6 +75,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('return printf("sizeof(number) = %d \n", sizeof(number));'), "RC")
         self.assertEqual(tokenizer("int printf(const char* format, ...);"), "C")  # ?????
         self.assertEqual(tokenizer('; addminutes(p_time, 21);'), "C")
+        self.assertEqual(tokenizer("a = getchar();"), "AC")
         self.assertEqual(tokenizer("int value = function();"), "NAC")
         self.assertEqual(tokenizer("int value = function(a, b, c);"), "NAC")
         self.assertEqual(tokenizer("float x = 0.456; double value = (double)x;"), "DADAT")
@@ -184,6 +185,7 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('do if (i > 10) i--; while (i > 0);'), "S{I{M}}")
         self.assertEqual(tokenizer('do if (i > 10) break; while (i > 0);'), "S{I{G}}")
         self.assertEqual(tokenizer("while(x < 10) x += 1;"), "S{AM}")
+        self.assertEqual(tokenizer('while((strstr(text, "Dragon flew away!") == NULL)) { foo(); }'), "S{C}")
         self.assertEqual(tokenizer("for(int i = 0; i < 10; i++) compare(func(i), 0);"), "S{C}")
         self.assertEqual(tokenizer("if(x < 10) int a;"), "I{N}")
         self.assertEqual(tokenizer("if(x < 10) int a = 10;"), "I{NA}")

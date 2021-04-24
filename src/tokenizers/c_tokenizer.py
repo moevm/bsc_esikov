@@ -75,7 +75,7 @@ class CTokenizer(Tokenizer):
 
         # Токенизация циклов
         tokens += CTokenizer.search_tokens(src, r'\bdo\b', "cycle")
-        while_from_do_tokens = CTokenizer.search_tokens(src, r'while\s*\([^;]*\)\s*;', "cycle")
+        while_from_do_tokens = CTokenizer.search_tokens(src, r'while\s*\([^;{]+\)\s*;', "cycle")
         src = CTokenizer.replace_tokens_in_src(src, while_from_do_tokens)
         cycle_tokens = CTokenizer.search_tokens(src, r'\b(for|while)\b\s*\([^{]+?\)\s*(?=[{\w])', "cycle")
         src = CTokenizer.replace_tokens_in_src(src, cycle_tokens)
