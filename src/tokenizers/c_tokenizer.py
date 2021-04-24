@@ -14,6 +14,7 @@ class CTokenizer(Tokenizer):
     FLOAT_TYPES = "|".join(["long double", "double", "float"])
     BORDER = "$"
     NOT_TOKEN = "."  # Используется при токенизации, не является конечным токеном
+    SUBSTITUTE = "1"  # Используется для замены строковых и символьных констант в тексте программы
     TOKENS = {
         "int": "N",  # - Number - целое число
         "double": "D",  # - Double - дробное число
@@ -48,8 +49,18 @@ class CTokenizer(Tokenizer):
         src = CTokenizer.replace_tokens_in_src(src, import_tokens, " ")
         return src
 
+    @staticmethod
+    def replace_strings(src):
+        strings_tokens = CTokenizer.search_tokens(src, r'"[^\n"]+"', "control")
+        strings_tokens += CTokenizer.search_tokens(src, r"'[^\n']+'", "control")
+        src = CTokenizer.replace_tokens_in_src(src, strings_tokens, CTokenizer.SUBSTITUTE)
+        return src
+
     def _process(self, src):
         tokens = []
+
+        # Замена символьных и строковых констант, например, чтобы ';' - не вносило ошибки в токенизацию
+        src = CTokenizer.replace_strings(src)
 
         # Токенизация тернарного оператора
         ternary_tokens, src = CTokenizer.get_tokens_ternary_operator(src)

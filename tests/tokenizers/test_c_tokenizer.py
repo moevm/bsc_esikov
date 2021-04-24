@@ -34,6 +34,12 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\n'), " " * 18 + "\n" + " " * 16 + "\n")
         self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\nint x = 0 ; \n'), " " * 18 + "\n" + " " * 16 + "\nint x = 0 ; \n")
 
+    def test_replace_strings(self):
+        self.assertEqual(CTokenizer.replace_strings("int abcd = 1000;"), "int abcd = 1000;")
+        self.assertEqual(CTokenizer.replace_strings("if (p[i] == ';')"), "if (p[i] == " + CTokenizer.SUBSTITUTE * 3 + ")")
+        self.assertEqual(CTokenizer.replace_strings("if ((p[i] == '.') || (p[i] == '?') || (p[i] == ';'))"), "if ((p[i] == " + CTokenizer.SUBSTITUTE * 3 + ") || (p[i] == " + CTokenizer.SUBSTITUTE * 3 + ") || (p[i] == " + CTokenizer.SUBSTITUTE * 3 + "))")
+        self.assertEqual(CTokenizer.replace_strings('char* string = "abcdefgh"'), 'char* string = ' + CTokenizer.SUBSTITUTE * 10)
+
     def get_tokens_str_after_tokenize(self, src):
         tokens = self.tokenizer.tokenize(src)
         return Token.get_tokens_str_from_token_list(tokens)
