@@ -41,15 +41,18 @@ def search():
         return '<h1>Search was not started</h1>'
 
     sim = searcher.get_similarity(page)
-    check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
-    return render_template(
-        'similarity.html',
-        page=page,
-        percentage=sim.similarity_percentage,
-        check_file_source=sim.check_file_source + "  " + sim.check_file_path,
-        check_file_src_list=check_file_similarity_src,
-        detected_file_source=sim.detected_file_source + "  " + sim.detected_file_path,
-        detected_file_src_list=detected_file_similarity_src,
-        block_left_button=int(page) <= 0,
-        block_right_button=int(page) >= len(searcher.similarity_list) - 1,
-    )
+    if sim is None:
+        return render_template('not_similarity.html')
+    else:
+        check_file_similarity_src, detected_file_similarity_src = sim.get_similarity_src()
+        return render_template(
+            'similarity.html',
+            page=page,
+            percentage=sim.similarity_percentage,
+            check_file_source=sim.check_file_source + "  " + sim.check_file_path,
+            check_file_src_list=check_file_similarity_src,
+            detected_file_source=sim.detected_file_source + "  " + sim.detected_file_path,
+            detected_file_src_list=detected_file_similarity_src,
+            block_left_button=int(page) <= 0,
+            block_right_button=int(page) >= len(searcher.similarity_list) - 1,
+        )
