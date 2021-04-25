@@ -5,70 +5,64 @@
     <div class="w3-container" style="width: 90%; max-width: 1320px; margin: 0 auto;">
         <div class="w3-center">
             <h1 style="font-weight: bold;">Similarity code</h1>
-            <form action="{{ url_for('search') }}" method="GET">
-                <input style="display: none;" type="number" name="page" value="{{ request.args.get('page', page) }}" id="page">
-
-                {% if block_left_button %}
-                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
-                            style="width: 100px; margin-right: 50px;" disabled>
-                        <b>&lt;</b>
-                    </button>
-                {% else %}
-                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
-                        style="width: 100px; margin-right: 50px;" type="submit"
-                        onclick="let page = document.getElementById('page'); page.value = Number(page.value) - 1;">
-                        <b>&lt;</b>
-                    </button>
-                {% endif %}
-
-                {% if block_right_button %}
-                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
-                            style="width: 100px;" disabled>
-                        <b>&gt;</b>
-                    </button>
-                {% else %}
-                    <button class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
-                        style="width: 100px;" type="submit"
-                        onclick="let page = document.getElementById('page'); page.value = Number(page.value) + 1;">
-                        <b>&gt;</b>
-                    </button>
-                {% endif %}
-
-            </form>
-            <div class="w3-section">
-                <b><i><span class="w3-text-red">{{ percentage }}%</span>&nbsp;similarity</i></b>
+            <div>
+                <button id="leftButton" class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
+                        style="width: 100px; margin-right: 50px;" disabled>
+                    <b>&lt;</b>
+                </button>
+                <button id="rightButton" class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
+                        style="width: 100px;">
+                    <b>&gt;</b>
+                </button>
             </div>
         </div>
-        <div class="w3-section w3-cell-row">
-            <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
-                <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
-                    <b>{{ check_file_source }}</b>
-                </div>
-            </div>
-            <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
-                <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
-                    <i>{{ detected_file_source }}</i>
-                </div>
-            </div>
-        </div>
-        <div>
-            {% for similarity_fragment in similarity_list %}
 
-            <div class="w3-section w3-cell-row">
-                <div class="w3-cell" style="width: 50%; padding: 0 15px;">
-                    <div style="min-width: 635px;">
-                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto; font-size: 14px;">{{ similarity_fragment[0] }}</pre>
+        <div id="similarity">
+            {% for similarity in similarity_list %}
+
+                <div style="display: none;">
+                    <div class="w3-section w3-center">
+                        <b><i><span class="w3-text-red">{{ similarity.similarity_percentage }}%</span>&nbsp;similarity</i></b>
+                    </div>
+                    <div class="w3-section w3-cell-row">
+                        <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
+                            <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
+                                <b>{{ similarity.check_file_source + "  " + similarity.check_file_path }}</b>
+                            </div>
+                        </div>
+                        <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
+                            <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
+                                <i>{{ similarity.detected_file_source + "  " + similarity.detected_file_path }}</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+
+                        {% for fragment in similarity.get_list_zip_similarity_fragments() %}
+
+                        <div class="w3-section w3-cell-row">
+                            <div class="w3-cell" style="width: 50%; padding: 0 15px;">
+                                <div style="min-width: 635px;">
+                                    <pre class="w3-code" style="max-width: 635px; overflow-x: auto; font-size: 14px;">{{ fragment[0] }}</pre>
+                                </div>
+                            </div>
+                            <div class="w3-cell" style="width: 50%; padding: 0 15px;">
+                                <div style="min-width: 635px;">
+                                    <pre class="w3-code" style="max-width: 635px; overflow-x: auto; font-size: 14px;">{{ fragment[1] }}</pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% endfor %}
                     </div>
                 </div>
-                <div class="w3-cell" style="width: 50%; padding: 0 15px;">
-                    <div style="min-width: 635px;">
-                        <pre class="w3-code" style="max-width: 635px; overflow-x: auto; font-size: 14px;">{{ similarity_fragment[1] }}</pre>
-                    </div>
-                </div>
-            </div>
 
             {% endfor %}
         </div>
+
+        <div id="len" style="display: none;">{{ len }}</div>
     </div>
+
+    <script src="{{ url_for('static', filename='/scripts/similarityMenu.js') }}"></script>
 
 {% endblock %}
