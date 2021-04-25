@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import render_template
 from flask import request
-from searcher import Searcher
+from src.searcher import Searcher
 
 # Dictionary of programming languages:
 # Name: src_file_extension

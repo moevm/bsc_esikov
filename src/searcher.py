@@ -1,5 +1,5 @@
 import sys
-from settings import settings
+from src.settings import settings
 from src.console import argv_parser
 from src.tokenizers.c_tokenizer import CTokenizer
 from src.console.dir_scanner import DirScanner
