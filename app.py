@@ -29,13 +29,18 @@ def similarity():
         )
         similarity = searcher.search_similarity()
     else:
-        return '<h1>Search was not started</h1>'
+        return render_template('message.html', message="Search was not started")
 
     if not similarity:
-        return render_template('not_similarity.html')
+        return render_template('message.html', message="Similarity not found")
     else:
         return render_template(
             'similarity.html',
             similarity_list=similarity,
             len=len(similarity)
         )
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('message.html', message="Page not found")
