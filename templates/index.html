@@ -7,7 +7,7 @@
             <h1 style="font-weight: bold;">Search similarity source code</h1>
         </div>
         <div class="w3-container" style="width: 85%; margin: 0 auto;">
-            <form id="search_form" action="{{ url_for('search') }}" method="POST">
+            <form id="searchForm" action="{{ url_for('similarity') }}" method="POST">
                 <div>
                     <div class="w3-border-bottom">
                         <h3><i>Required</i></h3>
@@ -77,20 +77,10 @@
         </div>
     </div>
 
-    <div id="spinner_container" style="display:none;">
+    <div id="spinnerContainer" style="display: none;">
         {% include 'spinner.html' %}
     </div>
 
-    <script>
-        document.getElementById('search_form').onsubmit = function() {
-            document.getElementById('content').style.opacity = 0.3;
-            document.getElementById('spinner_container').style.display = "block";
-            let timer = setInterval(() => {
-                let time = document.getElementById('time');
-                let current_time = time.textContent;
-                time.textContent = parseInt(current_time) + 1;
-            }, 1000);
-        };
-    </script>
+    <script src="{{ url_for('static', filename='/scripts/spinner.js') }}"></script>
 
 {% endblock %}
