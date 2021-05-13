@@ -13,7 +13,8 @@ class CTokenizer(Tokenizer):
     CHAR_TYPES = "|".join(["signed char", "unsigned char", "char"])
     FLOAT_TYPES = "|".join(["long double", "double", "float"])
     BORDER = "$"
-    NOT_TOKEN = "X"  # Используется при токенизации, не является конечным токеном
+    NOT_TOKEN = "."  # Используется при токенизации, не является конечным токеном
+    SUBSTITUTE = "1"  # Используется для замены строковых и символьных констант в тексте программы
     TOKENS = {
         "int": "N",  # - Number - целое число
         "double": "D",  # - Double - дробное число
@@ -44,19 +45,35 @@ class CTokenizer(Tokenizer):
 
     @staticmethod
     def replace_import(src):
-        import_tokens = CTokenizer.search_tokens(src, r'#include\s*[<"][^<>"]+[>"]', "control", re.DOTALL)
+        import_tokens = CTokenizer.search_tokens(src, r'#\s*include\s*[<"][^<>"]+[>"]', "control", re.DOTALL)
         src = CTokenizer.replace_tokens_in_src(src, import_tokens, " ")
+        return src
+
+    @staticmethod
+    def replace_strings(src):
+        strings_tokens = CTokenizer.search_tokens(src, r'"[^\n"]+"', "control")
+        strings_tokens += CTokenizer.search_tokens(src, r"'[^\n']+'", "control")
+        src = CTokenizer.replace_tokens_in_src(src, strings_tokens, CTokenizer.SUBSTITUTE)
+        return src
+
+    @staticmethod
+    def replace_macros(src):
+        macros_tokens = CTokenizer.search_tokens(src, r"#\s*define\s*[^\n]*", "control")
+        src = CTokenizer.replace_tokens_in_src(src, macros_tokens, " ")
         return src
 
     def _process(self, src):
         tokens = []
 
+        # Замена символьных и строковых констант, например, чтобы ';' - не вносило ошибки в токенизацию
+        src = CTokenizer.replace_strings(src)
+
+        # Замена директив #define
+        src = CTokenizer.replace_macros(src)
+
         # Токенизация тернарного оператора
         ternary_tokens, src = CTokenizer.get_tokens_ternary_operator(src)
         tokens += ternary_tokens
-
-        # Токенизация возврата из функции
-        tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
 
         # Токенизация указателей на функцию
         regex_for_func_ptr = r'\w+(\s*\*\s*)*\s*\((\s*\*\s*)+[\w+\[\]]+\s*\)\s*\([^=;]*\)\s*(?=[;=])'
@@ -74,12 +91,12 @@ class CTokenizer(Tokenizer):
         tokens += CTokenizer.get_tokens_missing_curly_braces(src)
 
         # Токенизация циклов
-        tokens += CTokenizer.search_tokens(src, r'\bdo\b', "cycle")
-        while_from_do_tokens = CTokenizer.search_tokens(src, r'while\s*\([^;]*\)\s*;', "cycle")
-        src = CTokenizer.replace_tokens_in_src(src, while_from_do_tokens)
-        cycle_tokens = CTokenizer.search_tokens(src, r'\b(for|while)\b\s*\([^{]+?\)\s*(?=[{\w])', "cycle")
+        cycle_tokens = CTokenizer.search_tokens(src, r'\b(for|while)\b\s*\([^{]+?\)\s*(?=[{\w*])', "cycle")
         src = CTokenizer.replace_tokens_in_src(src, cycle_tokens)
         tokens += cycle_tokens
+        tokens += CTokenizer.search_tokens(src, r'\bdo\b', "cycle")
+        while_from_do_tokens = CTokenizer.search_tokens(src, r'while\s*\([^;{]+\)\s*;', "cycle")
+        src = CTokenizer.replace_tokens_in_src(src, while_from_do_tokens)
 
         # Удаление закрывающей } в switch
         #   Специальный символ $ используется в дальнейшем при токенизации как окончание switch
@@ -104,12 +121,12 @@ class CTokenizer(Tokenizer):
                 tokens.append(Token("}", match.start(5) - 1, match.start(5) - 1))
 
         # Токенизация условных конструкций
-        if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w.])|\belse\b', "if")
+        if_else_tokens = CTokenizer.search_tokens(src, r'\b(if|else\s*if)\s*\([^{;]+?\)\s*(?=[{\w*.])|\belse\b', "if")
         src = CTokenizer.replace_tokens_in_src(src, if_else_tokens)
         tokens += if_else_tokens
 
         # Токенизация определения функции
-        function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)+|\s+)\w+\s*\([^{]*\)\s*(?={)', "func")
+        function_tokens = CTokenizer.search_tokens(src, r'\w+((\s*\*\s*)+|\s+)\w+\s*\([^{;]*\)\s*(?={)', "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
         tokens += function_tokens
 
@@ -121,7 +138,7 @@ class CTokenizer(Tokenizer):
         tokens += call_tokens
 
         # Токенизация приведения типа
-        type_cast_tokens = CTokenizer.search_tokens(src, r'\(\s*\w+(\s*\*?\s*)*\)\s*[\w(]', "cast")
+        type_cast_tokens = CTokenizer.search_tokens(src, r'\(\s*\w+(\s*\*?\s*)*\)\s*(?=[\w\(' + CTokenizer.NOT_TOKEN + r'])', "cast")
         src = CTokenizer.replace_tokens_in_src(src, type_cast_tokens)
         tokens += type_cast_tokens
 
@@ -135,8 +152,12 @@ class CTokenizer(Tokenizer):
         regex_for_struct_var = r'(struct|union)\s+\w+\s+\w+[\[\]\d]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'
         tokens += CTokenizer.search_tokens(src, regex_for_struct_var, "struct")
 
+        # Токенизация возврата из функции
+        tokens += CTokenizer.search_tokens(src, r'\breturn\b[^;]*;', "return")
+        src = re.sub(r'\breturn\b', CTokenizer.NOT_TOKEN * 6, src)
+
         # Токенизация основных типов данных
-        regex_for_ptr = r'({int_types}|{char_types}|{float_types}|void)(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d:]*(\s*,\s*\w+[\[\]\d]*\s*)*\s*(?=[;=])'\
+        regex_for_ptr = r'({int_types}|{char_types}|{float_types}|void)(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d:]*(\s*,(\s*\*+\s*)+(\s*const\s+)?\w+[\[\]\d]*\s*)*\s*(?=[;=])' \
                         .format(
                             int_types=CTokenizer.INT_TYPES,
                             char_types=CTokenizer.CHAR_TYPES,
@@ -165,9 +186,9 @@ class CTokenizer(Tokenizer):
         # Токенизация математических выражений
         tokens += CTokenizer.search_tokens(src, r'\w+\+\+|\+\+\w+', "math")
         tokens += CTokenizer.search_tokens(src, r'\w+--|--\w+', "math")
-        tokens += CTokenizer.search_tokens(src, r'(?<![@={},(\s])\s*\*', "math")  # @ используется
+        tokens += CTokenizer.search_tokens(src, r'(?<=[\w\d)])\s*\*', "math")
         tokens += CTokenizer.search_tokens(src, r'(?<=@)\*', "math")  # @ используется
-        tokens += CTokenizer.search_tokens(src, r'(?<![@={}><|&\s+-])\s*[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
+        tokens += CTokenizer.search_tokens(src, r'(?<![@={}><|&\s+-.])\s*[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
         tokens += CTokenizer.search_tokens(src, r'(?<=@)[+\-/%]\s*(?![>\s+-])', "math")  # @ используется
 
         # Токенизация логических операций

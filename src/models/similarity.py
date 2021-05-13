@@ -19,6 +19,10 @@ class Similarity:
         start, end = Token.find_border_tokens_str_in_token_list(src_file.tokens, sim_tokens_str)
         return src_file.src[start:end]
 
+    def get_list_zip_similarity_fragments(self):
+        check_file_similarity_src, detected_file_similarity_src = self.get_similarity_src()
+        return list(zip(check_file_similarity_src, detected_file_similarity_src))
+
     @property
     def check_file_path(self):
         return self.__check_file.path

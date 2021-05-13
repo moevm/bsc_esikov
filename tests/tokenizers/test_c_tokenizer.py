@@ -34,6 +34,17 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\n'), " " * 18 + "\n" + " " * 16 + "\n")
         self.assertEqual(CTokenizer.replace_import('#include <stdio.h>\n#include "max.h"\nint x = 0 ; \n'), " " * 18 + "\n" + " " * 16 + "\nint x = 0 ; \n")
 
+    def test_replace_strings(self):
+        self.assertEqual(CTokenizer.replace_strings("int abcd = 1000;"), "int abcd = 1000;")
+        self.assertEqual(CTokenizer.replace_strings("if (p[i] == ';')"), "if (p[i] == " + CTokenizer.SUBSTITUTE * 3 + ")")
+        self.assertEqual(CTokenizer.replace_strings("if ((p[i] == '.') || (p[i] == '?') || (p[i] == ';'))"), "if ((p[i] == " + CTokenizer.SUBSTITUTE * 3 + ") || (p[i] == " + CTokenizer.SUBSTITUTE * 3 + ") || (p[i] == " + CTokenizer.SUBSTITUTE * 3 + "))")
+        self.assertEqual(CTokenizer.replace_strings('char* string = "abcdefgh"'), 'char* string = ' + CTokenizer.SUBSTITUTE * 10)
+
+    def test_replace_macros(self):
+        self.assertEqual(CTokenizer.replace_macros("#define N 22"), " " * 12)
+        self.assertEqual(CTokenizer.replace_macros("#   define    N   22  "), " " * 22)
+        self.assertEqual(CTokenizer.replace_macros("#include <stdio.h>\n#define N 22\nint a = 10;"), "#include <stdio.h>\n" + " " * 12 + "\nint a = 10;")
+
     def get_tokens_str_after_tokenize(self, src):
         tokens = self.tokenizer.tokenize(src)
         return Token.get_tokens_str_from_token_list(tokens)
@@ -65,15 +76,18 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("double (*actions[] ) (int, int);"), "P")
         self.assertEqual(tokenizer("(int)x;"), "T")
         self.assertEqual(tokenizer("( int*  *) x;"), "T")
+        self.assertEqual(tokenizer("char* name = (char*)malloc(80*sizeof(char));"), "PATC")
         self.assertEqual(tokenizer("; func();"), "C")
         self.assertEqual(tokenizer(";func(x);"), "C")
         self.assertEqual(tokenizer("{ func (  x) ; "), "{C")
         self.assertEqual(tokenizer("}func(a,b)\n;"), "}C")
+        self.assertEqual(tokenizer(";\n\t\tfunc(a == b);"), "C")
         self.assertEqual(tokenizer(":func(a, sum(a, b))\n;"), "C")
         # self.assertEqual(tokenizer("void *message (void);"), "PC")
         self.assertEqual(tokenizer('return printf("sizeof(number) = %d \n", sizeof(number));'), "RC")
         self.assertEqual(tokenizer("int printf(const char* format, ...);"), "C")  # ?????
         self.assertEqual(tokenizer('; addminutes(p_time, 21);'), "C")
+        self.assertEqual(tokenizer("a = getchar();"), "AC")
         self.assertEqual(tokenizer("int value = function();"), "NAC")
         self.assertEqual(tokenizer("int value = function(a, b, c);"), "NAC")
         self.assertEqual(tokenizer("float x = 0.456; double value = (double)x;"), "DADAT")
@@ -102,6 +116,12 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('p_kate->name = "Tom";'), "A")
         self.assertEqual(tokenizer('age = people[i].name;'), "A")
         self.assertEqual(tokenizer('age = *(people[i]->name);'), "A")
+        self.assertEqual(tokenizer("*pa = NULL;"), "A")
+        self.assertEqual(tokenizer("*input = '\0';"), "A")
+        self.assertEqual(tokenizer("text[i++] = a;"), "MA")
+        self.assertEqual(tokenizer("*(sentence + i) = symbol;"), "MA")
+        self.assertEqual(tokenizer("*(text++) = symbol;"), "MA")
+        self.assertEqual(tokenizer("*(result++) = *(text++);"), "MAM")
         self.assertEqual(tokenizer("static int i = 0;"), "NA")
         self.assertEqual(tokenizer("const float PI = 3.14;"), "DA")
         self.assertEqual(tokenizer("float *const ptr=&i;"), "PA")
@@ -111,16 +131,28 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer("int value = func(y) + x;"), "NAM")
         self.assertEqual(tokenizer("int value = x + y - 2;"), "NAMM")
         self.assertEqual(tokenizer("int value = (45 + 94) / 4;"), "NAMM")
+        self.assertEqual(tokenizer("int value = (45 * 94) * 4;"), "NAMM")
         self.assertEqual(tokenizer("return a * b;"), "RM")
+        self.assertEqual(tokenizer("return a + b % 10;"), "RMM")
         self.assertEqual(tokenizer("return func();"), "RC")
         self.assertEqual(tokenizer("return;"), "R")
         self.assertEqual(tokenizer("\nreturn;"), "R")
         self.assertEqual(tokenizer(";return   ;"), "R")
+        self.assertEqual(tokenizer("return *ptr;"), "R")
+        self.assertEqual(tokenizer("return 1;"), "R")
+        self.assertEqual(tokenizer("return -1;"), "R")
         self.assertEqual(tokenizer("array[0] = 10 % 2;"), "AM")
         self.assertEqual(tokenizer("void* value = func(T, A, X);"), "PAC")
         self.assertEqual(tokenizer('struct time * p_time = input();'), "PAC")
+        self.assertEqual(tokenizer("int i, p;"), "N")
+        self.assertEqual(tokenizer("int  i, result = 1;"), "NA")
+        self.assertEqual(tokenizer("int kode, mass[20], m, count = 0;"), "NA")
+        self.assertEqual(tokenizer("int i = 0, factor = 1, n = 0, m = 10 + 3, SpaceBeforeTheFirstSentence = 0;"), "NAAAAMA")
+        # self.assertEqual(tokenizer("int multi_b_a = 19 + x * 3, y = foo(mass, size), z = foo(mass, size);"), "NAMMACAC")
         self.assertEqual(tokenizer("int x, y, z; x = y = z = 0;"), "NAAA")
         self.assertEqual(tokenizer("a = b = c = 34 + 7;"), "AAAM")
+        self.assertEqual(tokenizer("char *text, *text1, *sentence, *MrCheck;"), "P")
+        self.assertEqual(tokenizer("void * const text1, **const    text2;"), "P")
         self.assertEqual(tokenizer("double e = (double)a / (double)b;"), "DATMT")
         self.assertEqual(tokenizer("int sum(int a, int b) {"), "F{")
         self.assertEqual(tokenizer("void  _sum (){"), "F{")
@@ -183,10 +215,13 @@ class TestCTokenizer(unittest.TestCase):
         self.assertEqual(tokenizer('do if (i > 10) i--; while (i > 0);'), "S{I{M}}")
         self.assertEqual(tokenizer('do if (i > 10) break; while (i > 0);'), "S{I{G}}")
         self.assertEqual(tokenizer("while(x < 10) x += 1;"), "S{AM}")
+        self.assertEqual(tokenizer('while((strstr(text, "Dragon flew away!") == NULL)) { foo(); }'), "S{C}")
+        self.assertEqual(tokenizer("while ((str[i]==' ')||(str[i]=='\t')||(str[i]=='\n')) getchar();"), "S{C}")
         self.assertEqual(tokenizer("for(int i = 0; i < 10; i++) compare(func(i), 0);"), "S{C}")
         self.assertEqual(tokenizer("if(x < 10) int a;"), "I{N}")
         self.assertEqual(tokenizer("if(x < 10) int a = 10;"), "I{NA}")
         self.assertEqual(tokenizer("if(x < 10) if(x % 2 == 0) y += x;"), "I{I{AM}}")
+        self.assertEqual(tokenizer("if (a == ';' || a == '.') { i++; }"), "I{M}")
         self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x;"), "S{I{AM}}")
         self.assertEqual(tokenizer("while(x = func(x)) if(x % 2 == 0) y += x;"), "S{I{AM}}")
         self.assertEqual(tokenizer("while(x < 10) if(x % 2 == 0) y += x; else return 0;"), "S{I{AM}I{R}}")
@@ -220,6 +255,13 @@ class TestCTokenizer(unittest.TestCase):
         switch_str = "int updateCriticalNumber (int value)\n{ switch (value) {\ncase\n0: { return value + 64; }" \
                      "case -10: if (x > 80) return 10; default:  return func(value);}} "
         self.assertEqual(tokenizer(switch_str), "F{I{RM}I{I{R}}I{RC}}")
+        test_str = "if(*output==NULL)"\
+                       "*output = (char**) malloc(count*sizeof(char*));"\
+                   "else"\
+                       "*output = (char**) realloc (*output,count*sizeof(char*));"
+        self.assertEqual(tokenizer(test_str), "I{ATC}I{ATC}")
+        self.assertEqual(tokenizer("while(*output == NULL) *output = (char**) malloc(count * sizeof(char*));"), "S{ATC}")
+        self.assertEqual(tokenizer('#include <stdio.h>\n#define print(a) printf("%d \n", a);\nint main(void){\nint x = 10;\nprint(x);\nreturn 0;\n}'), "F{NACR}")
 
     def assert_tokens_list(self, current, true):
         self.assertEqual(len(current), len(true))

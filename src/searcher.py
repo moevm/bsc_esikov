@@ -1,5 +1,5 @@
 import sys
-from settings import settings
+from src.settings import settings
 from src.console import argv_parser
 from src.tokenizers.c_tokenizer import CTokenizer
 from src.console.dir_scanner import DirScanner
@@ -51,6 +51,8 @@ class Searcher:
 
     def get_similarity(self, at):
         index = int(at)
+        if len(self._similarity_list) == 0:
+            return None
         if index >= len(self._similarity_list):
             return self._similarity_list[-1]
         if index < 0:
