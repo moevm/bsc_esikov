@@ -4,32 +4,29 @@
 
 Переименовать файл `.env.example` в `.env` и внести в него свои данные, согласно представленному шаблону.
 
-Для запуска необходимо в качестве параметра передать путь до проверяемого объекта:
+Запуск осуществляется с помощью команды
 ```
 python3 main.py -c ../program.c
 ```
 
-Если необходимо осуществить поиск в конкретной директории, то нужно передать соответствующий путь с помощью параметра ``-d``:
+Или с помощью *docker*
 ```
-python3 main.py -c ../program.c -d ../search_dir
-```
-
-Один или оба параметра могут быть url к github файлам, директориям или репозиториям:
-```
-python3 main.py -c https://github.com/owner/repo/blob/master/src/file.c -d https://github.com/owner/repo
+docker-compose build --no-cache  
+docker-compose up
 ```
 
 ## Параметры
 
 ### Обязательные
 
-* Путь до проверяемого объекта в файловой системе или на github: `-c` или `--check`
+* **Check path** — путь до файла или директории на [github](https://github.com/)
+* **Language** — проверяемый язык программирования
 
 ### Необязательные
 
-* Путь до файла, директории или репозитория, где осуществляется поиск: `-d` или `--data`. По умолчанию поиск осуществляется в репозиториях и на [stackoverflow](https://stackoverflow.com/) по названиям функций в файле с помощью [search code](https://searchcode.com/), [github search](https://docs.github.com/en/rest/reference/search#search-code), [stack exchange](https://api.stackexchange.com/docs/advanced-search).
-* Предельное значение допустимого сходства программ в процентах — при его превышении программа будет считаться заимствованной: `-l` или `--limit`. По умолчанию — 60%.
-* Осуществлять ли поиск только на главной ветке репозитория или на всех ветках `-b` или `--branches`. 1 — поиск по всем веткам, 0 — только на главной. По умолчанию — 0. Имеет воздействие, если только один из параметров является url к github-репозиторию.
+* **Search path** — путь до файла, директории или репозитория на [github](https://github.com/). Если не указать, то поиск будет осуществляться в репозиториях на [github](https://github.com/) и на [stackoverflow](https://stackoverflow.com/) по названиям функций в файле с помощью [search code](https://searchcode.com/), [github search](https://docs.github.com/en/rest/reference/search#search-code), [stack exchange](https://api.stackexchange.com/docs/advanced-search)
+* **Limit** — предельное значение допустимого сходства программ в процентах — при его превышении программа будет считаться заимствованной. По умолчанию **60%**
+* **Branches to search** — осуществлять ли поиск только на главной ветке репозитория или на всех ветках
 
 ## Тестирование
 
@@ -46,3 +43,8 @@ python3 test_runner.py
 Для выполнения тестов на скорость работы используется скрипт:
 ```
 python3 time_test_runner.py
+```
+
+## Описание
+
+Более подробно прочитать про принцип работы можно [на wiki](https://github.com/moevm/bsc_esikov/wiki)
