@@ -6,7 +6,7 @@
 
 Запуск осуществляется с помощью команды
 ```
-python3 main.py -c ../program.c
+python3 main.py
 ```
 
 Или с помощью *docker*
