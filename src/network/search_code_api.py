@@ -1,5 +1,4 @@
 import requests
-import sys
 from src.models.src_file import SrcFile
 from src.network.search_api import SearchAPI
 
@@ -46,7 +45,7 @@ class SearchCodeAPI(SearchAPI):
                 path = '.' + result['location'] + '/' + file_name
                 src = self._get_src_code_file_from_id(result['id'])
                 file = SrcFile(file_name, path, src)
-                file.source = result['repo']
+                file.source = result['url']
                 yield file
             page += 1
 
@@ -55,16 +54,8 @@ class SearchCodeAPI(SearchAPI):
         return self._send_get_request(url).json()['code']
 
     def _send_get_request(self, url):
-        try:
-            response = requests.get(url, timeout=7)
-            if response.status_code == 429:
-                print('Request limit on searchcode.com reached. Try later')
-                sys.exit(-1)
-            response.raise_for_status()
-        except requests.exceptions.Timeout as e:
-            print(str(e).split("'")[-2])
-            sys.exit(-1)
-        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-            print(str(e))
-            sys.exit(-1)
+        response = requests.get(url, timeout=7)
+        if response.status_code == 429:
+            raise ValueError('Request limit on searchcode.com reached. Try later')
+        response.raise_for_status()
         return response

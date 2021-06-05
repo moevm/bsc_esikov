@@ -1,4 +1,3 @@
-import sys
 from src.settings import settings
 from src.console import argv_parser
 from src.tokenizers.c_tokenizer import CTokenizer
@@ -19,16 +18,15 @@ class Searcher:
         if file_extension == "c":
             self._tokenizer = CTokenizer()
         else:
-            print("No programming language specified")
-            sys.exit(-1)
+            raise ValueError("No programming language specified")
+
         self._github_api = GithubAPI(settings['GITHUB_TOKEN'], file_extension)
         self._dir_scanner = DirScanner(file_extension)
         self._file_extension = file_extension
 
         if PathParser.is_file(check_path):
             if not SrcFile.is_file_have_this_extension(check_path, file_extension):
-                print('The app only supports .c files')
-                sys.exit(-1)
+                raise ValueError('The app only supports .c files')
         self._check_path = check_path
         if search_path == '':
             self._search_path = SEARCH_ALL_REPOS
@@ -40,8 +38,7 @@ class Searcher:
         try:
             self._limit = int(limit)
         except ValueError as e:
-            print("The entered limit is not a number: " + limit)
-            sys.exit(-1)
+            raise ValueError("The entered limit is not a number: " + limit)
 
         self._similarity_list = []
 
@@ -61,6 +58,7 @@ class Searcher:
 
     def search_similarity(self):
         total_similarity = []
+        global_pars = []
         for file in self._get_files_from_path(self._check_path):
             file.tokens = self._tokenizer.tokenize(file.src)
             heskel_algo = Heskel(file.tokens_str)
@@ -71,11 +69,13 @@ class Searcher:
             for sim in self._get_similarity(file, greedy_algo, heskel_algo):
                 if sim.detected_file_path in similarity_paths:
                     continue
+                if (sim.detected_file_path, sim.check_file_path) in global_pars:
+                    continue
                 similarity.append(sim)
                 similarity_paths.append(sim.detected_file_path)
+                global_pars.append((sim.check_file_path, sim.detected_file_path))
             total_similarity += similarity
-
-        self._similarity_list = total_similarity
+            self._similarity_list = total_similarity
         return total_similarity
 
     def _get_files_from_path(self, path):
@@ -102,8 +102,10 @@ class Searcher:
 
         for file in dir_scan_generator:
             file.tokens = self._tokenizer.tokenize(file.src)
-            # print(file.path + " : " + file.tokens_str)
-            similarity_percentage = heskel_algo.search(file.tokens_str)
+            try:
+                similarity_percentage = heskel_algo.search(file.tokens_str)
+            except ZeroDivisionError:
+                raise ValueError("The file " + file.source + " does not contain tokens for the C language")
             if similarity_percentage > self._limit and comparable_file.path != file.path:
                 file.similarity_percentage = similarity_percentage
                 yield file

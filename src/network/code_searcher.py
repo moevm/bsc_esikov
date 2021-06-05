@@ -7,7 +7,7 @@ class CodeSearcher:
     @staticmethod
     def search_per_function_names(list_func_names, file_extension, github_token):
         search_api = [
-            SearchCodeAPI(file_extension),
+            # SearchCodeAPI(file_extension),
             GithubSearchAPI(file_extension, github_token),
             StackExchangeAPI(file_extension)
         ]

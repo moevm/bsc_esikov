@@ -1,5 +1,4 @@
 import requests
-import sys
 from src.network.search_api import SearchAPI
 from src.network.github_api import GithubAPI
 
@@ -28,15 +27,10 @@ class GithubSearchAPI(SearchAPI):
             'Authorization': 'token ' + self._token,
             'accept': 'application/vnd.github.v3+json',
         }
-        try:
-            response = requests.get(url, headers=headers, timeout=7)
-            response.raise_for_status()
-        except requests.exceptions.Timeout as e:
-            print(str(e).split("'")[-2])
-            sys.exit(-1)
-        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-            print(str(e))
-            sys.exit(-1)
+        response = requests.get(url, headers=headers, timeout=7)
+        if response.status_code == 403:
+            raise KeyError
+        response.raise_for_status()
         return response
 
     def search(self, func_name):
@@ -50,7 +44,7 @@ class GithubSearchAPI(SearchAPI):
                 owner_login = item["repository"]["owner"]["login"]
                 repo_name = item["repository"]["name"]
                 path = "./" + item["path"]
-                file = github.get_src_file_from_sha(owner_login, repo_name, item['sha'], path)
-                file.source = item["repository"]["html_url"]
+                file = github.get_src_file_from_sha(owner_login, repo_name, item['sha'], path, None)
+                file.source = item["html_url"]
                 yield file
             page += 1

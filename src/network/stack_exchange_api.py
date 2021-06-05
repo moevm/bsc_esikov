@@ -1,5 +1,4 @@
 import requests
-import sys
 from bs4 import BeautifulSoup
 from src.network.search_api import SearchAPI
 from src.models.src_file import SrcFile
@@ -25,15 +24,8 @@ class StackExchangeAPI(SearchAPI):
             page=page,
             pagesize=per_page
         )
-        try:
-            response = requests.get(url, timeout=7)
-            response.raise_for_status()
-        except requests.exceptions.Timeout as e:
-            print(str(e).split("'")[-2])
-            sys.exit(-1)
-        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-            print(str(e))
-            sys.exit(-1)
+        response = requests.get(url, timeout=7)
+        response.raise_for_status()
         return response
 
     def search(self, func_name):

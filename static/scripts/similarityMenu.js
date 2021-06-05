@@ -1,9 +1,14 @@
 let similarity = document.getElementById('similarity').children;
 let leftButton = document.getElementById('leftButton');
 let rightButton = document.getElementById('rightButton');
-similarity[0].style.display = "";
+if (similarity[0] !== undefined) {
+    similarity[0].style.display = "";
+}
 let index = 0;
 let len = parseInt(document.getElementById('len').textContent);
+if (len <= 1) {
+    rightButton.disabled = true;
+}
 
 leftButton.onclick = () => {
     if (index - 1 >= 0) {
