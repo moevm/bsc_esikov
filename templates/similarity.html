@@ -4,7 +4,7 @@
 
     <div class="w3-container" style="width: 90%; max-width: 1320px; margin: 0 auto;">
         <div class="w3-center">
-            <h1 style="font-weight: bold;">Similarity code</h1>
+            <h1 style="font-weight: bold;">{{ header }}</h1>
             <div>
                 <button id="leftButton" class="w3-btn w3-round w3-light-grey w3-border w3-border-black w3-large"
                         style="width: 100px; margin-right: 50px;" disabled>
@@ -27,12 +27,12 @@
                     <div class="w3-section w3-cell-row">
                         <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
                             <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
-                                <b>{{ similarity.check_file_source + "  " + similarity.check_file_path }}</b>
+                                <a href="{{ similarity.check_file_source }}" style="display: block; overflow-x: hidden;"><b>{{ similarity.check_file_source }}</b></a>
                             </div>
                         </div>
                         <div class="w3-cell w3-center" style="width: 50%; padding: 0 15px;">
                             <div style="padding: 0 15px; max-width: 615px; overflow-x: auto;">
-                                <i>{{ similarity.detected_file_source + "  " + similarity.detected_file_path }}</i>
+                                <a href="{{ similarity.detected_file_source }}" style="display: block; overflow-x: hidden;"><i>{{ similarity.detected_file_source }}</i></a>
                             </div>
                         </div>
                     </div>

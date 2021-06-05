@@ -1,3 +1,4 @@
+import requests
 from flask import Flask
 from flask import render_template
 from flask import request
@@ -27,18 +28,29 @@ def similarity():
             branches=request.form['branches'],
             file_extension=request.form['language']
         )
-        similarity = searcher.search_similarity()
+        try:
+            similarity_list = searcher.search_similarity()
+            if not similarity_list:
+                return render_template('message.html', message="Similarity not found")
+            else:
+                return render_similarity_template("Similarity code", similarity_list)
+        except (KeyError, requests.exceptions.HTTPError) as e:
+            return render_similarity_template("Github API rate limit exceeded. Limit = 5000 requests per hour. Try later. Matches found before error:", searcher.similarity_list)
+        except requests.exceptions.Timeout as e:
+            return render_similarity_template(str(e).split("'")[-2] + ". Matches found before error:", searcher.similarity_list)
+        except (ValueError, requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
+            return render_similarity_template(str(e) + ". Matches found before error:", searcher.similarity_list)
     else:
         return render_template('message.html', message="Search was not started")
 
-    if not similarity:
-        return render_template('message.html', message="Similarity not found")
-    else:
-        return render_template(
-            'similarity.html',
-            similarity_list=similarity,
-            len=len(similarity)
-        )
+
+def render_similarity_template(header, similarity_list):
+    return render_template(
+        'similarity.html',
+        header=header,
+        similarity_list=similarity_list,
+        len=len(similarity_list)
+    )
 
 
 @app.errorhandler(404)

@@ -82,7 +82,7 @@ class CTokenizer(Tokenizer):
         tokens += function_pointer_tokens
 
         # Токенизация определения функции, возвращающей указатель на функцию
-        regex_for_func_def = r'\w+(\s*\*\s*)*\s*\((\s*\*?\s*)*\w+\s*\([^{]*\)\s*\)\s*\([^{]*\)\s*(?={)'
+        regex_for_func_def = r'[\w*\[\]\s]+\s+\([\w*\[\]\s]+\([\w*\[\]\s]+\)\)\s*\([\w*\[\]\s]+\)\s*(?={)'
         function_tokens = CTokenizer.search_tokens(src, regex_for_func_def, "func")
         src = CTokenizer.replace_tokens_in_src(src, function_tokens)
         tokens += function_tokens
